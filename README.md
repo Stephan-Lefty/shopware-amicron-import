@@ -84,11 +84,17 @@ Einzustellen ist nur, **woher** Faktura die Dateien liest:
 
 ## 3. Installation des Tools (was die `.bat`-Datei macht)
 
-Voraussetzung: der komplette Projektordner (diese Datei,
-`import_orders.py`, `import_orders.ico`, `config.ini.example`,
-`Faktura_Importdefinition.xml`, `VERSION`, `SRFakturaImport_Setup.ps1`,
-`SRFakturaImport_Setup.bat`) liegt bereits auf dem Ziel-PC, z. B. unter
-`C:\SRFakturaImport\scripts\shopware-amicron-import\`.
+Voraussetzung: die ZIP-Datei wurde irgendwo auf dem Ziel-PC entpackt
+(Downloads-Ordner reicht völlig aus) — der Ordner `shopware-amicron-import`
+darin kann an **beliebiger Stelle** liegen, das Setup-Script findet alles
+relativ zu sich selbst. Nur der Faktura-Import-Ordner selbst
+(`C:\SRFakturaImport\amicron\import`) ist ein fester, davon unabhängiger
+Pfad (siehe Abschnitt "Ordnerstruktur").
+
+Empfehlung (kein Muss): `config.ini` enthält echte Zugangsdaten — daher
+den Ordner eher an einen dauerhaften Ort verschieben statt in Downloads
+liegen zu lassen, wo er beim gelegentlichen Aufräumen versehentlich
+gelöscht werden könnte.
 
 Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
 `SRFakturaImport_Setup.ps1` und führt automatisch aus:
@@ -133,6 +139,7 @@ C:\SRFakturaImport\scripts\shopware-amicron-import\   (Programmordner, Ort belie
 ├── config.ini                  (enthält Zugangsdaten, nicht versionieren!)
 ├── config.ini.example
 ├── Faktura_Importdefinition.xml
+├── VERSION
 ├── SRFakturaImport_Setup.ps1
 ├── SRFakturaImport_Setup.bat
 └── README.md
