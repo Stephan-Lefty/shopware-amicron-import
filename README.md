@@ -91,11 +91,15 @@ Rest automatisch.
 Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
 `SRFakturaImport_Setup.ps1` und führt automatisch aus:
 
-0. **Programmdateien an den festen Zielort kopieren** — falls das Script
-   nicht schon direkt in `C:\SRFakturaImport\scripts\shopware-amicron-import\`
-   liegt (z. B. weil die ZIP in Downloads entpackt wurde), werden alle
-   Dateien dorthin kopiert. Alle folgenden Schritte laufen dann auf
-   dieser dauerhaften Kopie.
+0. **Vorhandene Installation erkennen und Programmdateien an den festen
+   Zielort kopieren** — falls am Zielort (`C:\SRFakturaImport\scripts\shopware-amicron-import\`)
+   bereits eine `VERSION`-Datei existiert, zeigt das Script die installierte
+   Version an und fragt: *"Möchten Sie die neue Version installieren? (j/n)"*
+   mit dem Hinweis, dass alte Programmdateien überschrieben werden. Bei "n"
+   bricht das Setup ab, ohne etwas zu verändern. Bei "j" (oder bei einer
+   Erstinstallation) werden alle Dateien an den festen Zielort kopiert —
+   **außer einer bereits vorhandenen `config.ini`**, die nie überschrieben
+   wird, damit manuell eingetragene Zugangsdaten erhalten bleiben.
 1. **Python prüfen/installieren** — falls `python` nicht gefunden wird,
    Installation über `winget install --id Python.Python.3.12`; falls
    winget nicht verfügbar ist, Fallback auf Direkt-Download des
@@ -235,6 +239,13 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.5.0 (2026-08-06)
+- Setup erkennt eine bereits vorhandene Installation (anhand der
+  `VERSION`-Datei am Zielort), zeigt die installierte Version an und
+  fragt vor dem Überschreiben um Bestätigung (j/n)
+- Eine bereits vorhandene `config.ini` am Zielort wird beim Update nie
+  überschrieben — manuell eingetragene Zugangsdaten bleiben erhalten
 
 ### 1.4.0 (2026-08-06)
 - Setup kopiert sich jetzt selbst an einen festen, dauerhaften Zielort

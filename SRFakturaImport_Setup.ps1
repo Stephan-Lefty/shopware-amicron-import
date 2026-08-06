@@ -1,8 +1,11 @@
 # Komplettes Setup fuer den Shopware-Amicron-Bestellimport.
 # Fuehrt alle Schritte aus, die bisher von Hand gemacht wurden:
-#   0. Programmdateien an den festen, dauerhaften Zielort kopieren
+#   0. Falls bereits eine Version installiert ist: Hinweis anzeigen und
+#      Bestaetigung (j/n) einholen, bevor ueberschrieben wird. Danach
+#      Programmdateien an den festen, dauerhaften Zielort kopieren
 #      (falls von woanders aus gestartet, z.B. aus einem entpackten
-#      Download-Ordner)
+#      Download-Ordner). Eine bereits vorhandene config.ini am Zielort
+#      wird dabei NIE ueberschrieben.
 #   1. Python pruefen / installieren (winget, mit Fallback auf Direkt-Download)
 #   2. Benoetigte Python-Bibliothek installieren (requests)
 #   3. Ordnerstruktur anlegen
@@ -20,14 +23,41 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "=== SRFakturaImport Setup ===" -ForegroundColor Cyan
 
-# --- 0. Programmdateien an den festen Zielort kopieren --------------------
+# --- 0. Vorhandene Installation pruefen, dann Programmdateien an den
+#        festen Zielort kopieren ------------------------------------------
 $OriginalDir = $PSScriptRoot
 $PermanentRoot = "C:\SRFakturaImport\scripts\shopware-amicron-import"
 
 if ($OriginalDir -ne $PermanentRoot) {
+    $ExistingVersionPath = Join-Path $PermanentRoot "VERSION"
+    if (Test-Path $ExistingVersionPath) {
+        $ExistingVersion = (Get-Content $ExistingVersionPath -Raw).Trim()
+        $NewVersionPath = Join-Path $OriginalDir "VERSION"
+        $NewVersion = if (Test-Path $NewVersionPath) { (Get-Content $NewVersionPath -Raw).Trim() } else { "unbekannt" }
+
+        Write-Host ""
+        Write-Host "Sie haben bereits die Version $ExistingVersion installiert." -ForegroundColor Yellow
+        Write-Host "Achtung: Alle alten Programmdateien am Zielort werden ueberschrieben (Ihre config.ini bleibt erhalten)!" -ForegroundColor Yellow
+        $confirm = Read-Host "Moechten Sie die neue Version $NewVersion installieren? (j/n)"
+        if ($confirm -notmatch "^[jJ]") {
+            Write-Host "Installation abgebrochen." -ForegroundColor Red
+            exit 0
+        }
+    }
+
     Write-Host "Kopiere Programmdateien nach $PermanentRoot ..." -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path $PermanentRoot | Out-Null
-    Copy-Item -Path (Join-Path $OriginalDir "*") -Destination $PermanentRoot -Recurse -Force
+
+    # Eine bereits vorhandene, evtl. vom Nutzer angepasste config.ini am
+    # Zielort niemals ueberschreiben. Nur bei einer Erstinstallation (noch
+    # keine config.ini am Zielort) wird die evtl. mitgelieferte config.ini
+    # aus dem Quellordner mit uebernommen.
+    if (Test-Path (Join-Path $PermanentRoot "config.ini")) {
+        Copy-Item -Path (Join-Path $OriginalDir "*") -Destination $PermanentRoot -Recurse -Force -Exclude "config.ini"
+        Write-Host "Vorhandene config.ini am Zielort bleibt unveraendert erhalten." -ForegroundColor Green
+    } else {
+        Copy-Item -Path (Join-Path $OriginalDir "*") -Destination $PermanentRoot -Recurse -Force
+    }
     $ScriptDir = $PermanentRoot
 } else {
     $ScriptDir = $OriginalDir
