@@ -170,13 +170,12 @@ Shop ggf. überprüfen/ändern:
   in `import_orders.py`), da sie nur die Versandländer-Auswahl ist, kein
   Produktmerkmal
 - **Länderkürzel ("L"-Feld)**: Shopware liefert 2-stellige ISO-Codes
-  (`DE`, `AT`, ...). `DE` erkennt Faktura's `CONVERTLAND`-Tabelle in der
-  Importdefinition direkt, für Österreich aber nur `AUT`/`AU`, nicht das
-  von Shopware gelieferte `AT` — daher wird `AT` im Script auf `AUT`
-  umgeschrieben (`COUNTRY_ISO_OVERRIDES` in `import_orders.py`). Faktura
-  selbst wandelt beide dann in seine eigenen internen Kurzcodes um
-  (`DE`→`D`, `AUT`→`A`) — im "L"-Feld erscheint also `D`/`A`, nicht
-  `DE`/`AT`, das ist so beabsichtigt.
+  (`DE`, `AT`, ...), die unverändert übertragen werden. Das passt exakt
+  zur "Landeskürzel"-Spalte in Faktura's Länder-Stammdaten
+  (*Einstellungen → Länderauswahl*), wo z. B. Österreich als `AT`
+  geführt wird — die `CONVERTLAND`-Tabelle in der alten
+  Shopware-V4.1-Importdefinition (mit Kurzcodes wie `A`/`D`) ist dafür
+  nicht (mehr) maßgeblich.
 - **Lieferart**: wird immer fest als `Paketdienst` übertragen, unabhängig
   von der in Shopware hinterlegten Versandart
 - **Bestelldatum**: Format `TT.MM.JJJJ` (deutsches Datumsformat)
@@ -217,6 +216,12 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.2.1 (2026-08-06)
+- Länderkürzel-Fix aus 1.1.0 korrigiert: Es wird wieder der reine,
+  unveränderte 2-stellige ISO-Code (`DE`, `AT`, ...) übertragen — das
+  entspricht Faktura's tatsächlicher Länder-Stammdatentabelle, die
+  vorherige Umschreibung auf `AUT` war ein Irrtum
 
 ### 1.2.0 (2026-08-06)
 - Konsolenfenster schließt sich nach dem Lauf nicht mehr automatisch
