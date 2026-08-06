@@ -169,10 +169,14 @@ Shop ggf. überprüfen/ändern:
   dabei bewusst ausgeschlossen (steht in `OPTION_GROUPS_EXCLUDED_FROM_ARTICLE_NAME`
   in `import_orders.py`), da sie nur die Versandländer-Auswahl ist, kein
   Produktmerkmal
-- **Länderkürzel ("L"-Feld)**: es wird der 3-stellige ISO-Code
-  (`DEU`/`AUT`, mit Rückfallebene auf den 2-stelligen Code) übertragen,
-  nicht der 2-stellige (`DE`/`AT`) — Faktura's `CONVERTLAND`-Tabelle in
-  der Importdefinition erkennt für Österreich nur `AUT`/`AU`, nicht `AT`
+- **Länderkürzel ("L"-Feld)**: Shopware liefert 2-stellige ISO-Codes
+  (`DE`, `AT`, ...). `DE` erkennt Faktura's `CONVERTLAND`-Tabelle in der
+  Importdefinition direkt, für Österreich aber nur `AUT`/`AU`, nicht das
+  von Shopware gelieferte `AT` — daher wird `AT` im Script auf `AUT`
+  umgeschrieben (`COUNTRY_ISO_OVERRIDES` in `import_orders.py`). Faktura
+  selbst wandelt beide dann in seine eigenen internen Kurzcodes um
+  (`DE`→`D`, `AUT`→`A`) — im "L"-Feld erscheint also `D`/`A`, nicht
+  `DE`/`AT`, das ist so beabsichtigt.
 - **Lieferart**: wird immer fest als `Paketdienst` übertragen, unabhängig
   von der in Shopware hinterlegten Versandart
 - **Bestelldatum**: Format `TT.MM.JJJJ` (deutsches Datumsformat)
@@ -213,6 +217,13 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.2.0 (2026-08-06)
+- Konsolenfenster schließt sich nach dem Lauf nicht mehr automatisch
+  (auch bei Fehlern) — es bleibt offen mit einer Meldung, bis manuell
+  mit Enter geschlossen wird
+- Klarere Meldung bei keinen offenen Bestellungen: "Es sind keine neuen
+  Bestellungen eingegangen!"
 
 ### 1.1.0 (2026-08-06)
 - Artikelname enthält jetzt die vom Kunden gewählten Varianten-Optionen

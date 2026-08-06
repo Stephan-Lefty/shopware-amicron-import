@@ -113,6 +113,17 @@ def salutation_text(salutation):
     return ""
 
 
+# Shopware liefert Standard-2-Buchstaben-ISO-Codes (DE, AT, ...). Faktura's
+# CONVERTLAND-Tabelle in der Importdefinition erkennt "DE" bereits korrekt,
+# aber fuer Oesterreich nur "AUT"/"AU", nicht das von Shopware gelieferte "AT".
+COUNTRY_ISO_OVERRIDES = {"AT": "AUT"}
+
+
+def country_code(country):
+    iso = country.get("iso") or ""
+    return COUNTRY_ISO_OVERRIDES.get(iso, iso)
+
+
 def build_address_node(parent, tag_name, address, new_data, email=None):
     address = address or {}
     node = ET.SubElement(parent, tag_name, {"NewData": new_data})
@@ -130,7 +141,7 @@ def build_address_node(parent, tag_name, address, new_data, email=None):
         add_text(node, "vatId", address.get("vatId"))
         add_text(node, "email", email or "")
     country = address.get("country") or {}
-    add_text(node, "countryiso", country.get("iso3") or country.get("iso"))
+    add_text(node, "countryiso", country_code(country))
     return node
 
 
@@ -293,7 +304,7 @@ def main():
     print(f"{len(orders)} Bestellung(en) gefunden.")
 
     if not orders:
-        print("Keine offenen Bestellungen, es wird keine Datei geschrieben.")
+        print("Es sind keine neuen Bestellungen eingegangen!")
         return
 
     xml_bytes = build_orders_xml(orders, shop_domain)
@@ -307,4 +318,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        print(f"Fehler: {exc}")
+    input("\nFenster mit Enter schliessen ...")
