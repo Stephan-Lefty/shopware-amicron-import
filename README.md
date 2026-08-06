@@ -86,7 +86,7 @@ Einzustellen ist nur, **woher** Faktura die Dateien liest:
 
 Voraussetzung: der komplette Projektordner (diese Datei,
 `import_orders.py`, `import_orders.ico`, `config.ini.example`,
-`Faktura_Importdefinition.xml`, `SRFakturaImport_Setup.ps1`,
+`Faktura_Importdefinition.xml`, `VERSION`, `SRFakturaImport_Setup.ps1`,
 `SRFakturaImport_Setup.bat`) liegt bereits auf dem Ziel-PC, z. B. unter
 `C:\SRFakturaImport\scripts\shopware-amicron-import\`.
 
@@ -106,12 +106,20 @@ Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
    sie aus `config.ini.example` erzeugt, wobei der `import_folder`-Pfad
    automatisch korrekt (absolut) eingetragen wird. `shop_url`,
    `client_id`, `client_secret` müssen danach von Hand ergänzt werden.
-5. **Desktop-Verknüpfung anlegen** — `Shopware Bestellimport.lnk` mit
-   `import_orders.ico` als Icon, Ziel ist `import_orders.py`
+5. **Desktop-Verknüpfung anlegen** — `Shopware Bestellimport (vX.Y.Z).lnk`
+   mit `import_orders.ico` als Icon, Ziel ist `import_orders.py`. Die
+   Versionsnummer kommt aus der `VERSION`-Datei und steht damit direkt
+   als Text unter dem Desktop-Icon — so ist auf einen Blick erkennbar,
+   ob die aktuelle Version installiert ist. Beim erneuten Ausführen des
+   Setups wird eine ältere/anders benannte Verknüpfung automatisch
+   entfernt, damit nicht mehrere Icons parallel auf dem Desktop liegen.
 
 Eine Neuinstallation (neuer PC, frisches Windows) bedeutet danach nur
 noch: Ordner kopieren, `.bat` doppelklicken, `config.ini` mit den drei
-Shopware-Werten befüllen — fertig.
+Shopware-Werten befüllen — fertig. Ein **Update** auf eine neue Version
+läuft genauso: Dateien überschreiben (inkl. der neuen `VERSION`-Datei),
+`.bat` erneut ausführen — die Desktop-Verknüpfung wird automatisch mit
+der neuen Versionsnummer neu angelegt.
 
 ## 4. Ordnerstruktur
 
@@ -216,6 +224,14 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.3.0 (2026-08-06)
+- Zentrale `VERSION`-Datei als Versionsquelle eingeführt
+- Desktop-Verknüpfung enthält jetzt die Versionsnummer im Dateinamen
+  (`Shopware Bestellimport (vX.Y.Z).lnk`), damit sie direkt unter dem
+  Icon sichtbar ist
+- Setup-Script entfernt beim erneuten Ausführen automatisch ältere/
+  anders benannte Verknüpfungen, um Duplikate zu vermeiden
 
 ### 1.2.1 (2026-08-06)
 - Länderkürzel-Fix aus 1.1.0 korrigiert: Es wird wieder der reine,

@@ -86,10 +86,21 @@ if (-not (Test-Path $ConfigPath)) {
     Write-Host "config.ini existiert bereits, wird nicht ueberschrieben." -ForegroundColor Green
 }
 
-# --- 5. Desktop-Verknuepfung mit Icon --------------------------------------
+# --- 5. Desktop-Verknuepfung mit Icon (inkl. Versionsnummer im Namen) -----
+$VersionPath = Join-Path $ScriptDir "VERSION"
+$Version = if (Test-Path $VersionPath) { (Get-Content $VersionPath -Raw).Trim() } else { "" }
+$LinkName = if ($Version) { "Shopware Bestellimport (v$Version).lnk" } else { "Shopware Bestellimport.lnk" }
+
+$DesktopPath = [Environment]::GetFolderPath("Desktop")
 $IconPath = Join-Path $ScriptDir "import_orders.ico"
 $TargetPy = Join-Path $ScriptDir "import_orders.py"
-$LinkPath = Join-Path ([Environment]::GetFolderPath("Desktop")) "Shopware Bestellimport.lnk"
+$LinkPath = Join-Path $DesktopPath $LinkName
+
+# Alte Verknuepfungen mit anderer/ohne Versionsnummer entfernen, damit nach
+# einem Update nicht mehrere Icons gleichzeitig auf dem Desktop liegen.
+Get-ChildItem -Path $DesktopPath -Filter "Shopware Bestellimport*.lnk" -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -ne $LinkPath } |
+    Remove-Item -Force
 
 $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut($LinkPath)
