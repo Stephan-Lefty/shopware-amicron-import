@@ -12,7 +12,9 @@
 #   4. config.ini aus der Vorlage anlegen (falls noch nicht vorhanden) und den
 #      import_folder-Pfad automatisch korrekt eintragen
 #   5. Desktop-Verknuepfung mit Icon anlegen (inkl. Versionsnummer im Namen)
-#   6. Optional: urspruenglichen Download-/Entpack-Ordner und ZIP-Datei in
+#   6. Bei Erstinstallation oder Versionswechsel: Aenderungsprotokoll auf
+#      GitHub im Browser oeffnen
+#   7. Optional: urspruenglichen Download-/Entpack-Ordner und ZIP-Datei in
 #      den Papierkorb verschieben
 #
 # Aufruf: Rechtsklick > "Mit PowerShell ausfuehren", oder per Doppelklick auf
@@ -27,6 +29,8 @@ Write-Host "=== SRFakturaImport Setup ===" -ForegroundColor Cyan
 #        festen Zielort kopieren ------------------------------------------
 $OriginalDir = $PSScriptRoot
 $PermanentRoot = "C:\SRFakturaImport\scripts\shopware-amicron-import"
+$ChangelogUrl = "https://github.com/Stephan-Lefty/shopware-amicron-import#%C3%A4nderungsprotokoll"
+$OpenChangelog = $false
 
 if ($OriginalDir -ne $PermanentRoot) {
     $ExistingVersionPath = Join-Path $PermanentRoot "VERSION"
@@ -43,6 +47,10 @@ if ($OriginalDir -ne $PermanentRoot) {
             Write-Host "Installation abgebrochen." -ForegroundColor Red
             exit 0
         }
+        if ($ExistingVersion -ne $NewVersion) { $OpenChangelog = $true }
+    } else {
+        # Noch keine VERSION-Datei am Zielort gefunden -> Erstinstallation
+        $OpenChangelog = $true
     }
 
     Write-Host "Kopiere Programmdateien nach $PermanentRoot ..." -ForegroundColor Cyan
@@ -191,7 +199,19 @@ Write-Host "Letzter manueller Schritt: config.ini oeffnen und shop_url / client_
 Write-Host "In Faktura als XML-Ordner einstellen: $ImportFolder" -ForegroundColor Yellow
 Write-Host "Optional als Nach-Import-Ordner in Faktura: $ErledigtFolder" -ForegroundColor Yellow
 
-# --- 6. Aufraeumen (optional) ----------------------------------------------
+# Bei Erstinstallation oder einer tatsaechlich neuen Version das
+# Aenderungsprotokoll im Browser oeffnen, damit sofort sichtbar ist, was
+# sich geaendert hat. Nicht bei einem erneuten Lauf ohne Versionswechsel.
+if ($OpenChangelog) {
+    Write-Host "Oeffne Aenderungsprotokoll im Browser ..." -ForegroundColor Cyan
+    try {
+        Start-Process $ChangelogUrl
+    } catch {
+        Write-Warning "Browser konnte nicht automatisch geoeffnet werden: $ChangelogUrl"
+    }
+}
+
+# --- 7. Aufraeumen (optional) ----------------------------------------------
 if ($OriginalDir -ne $PermanentRoot) {
     Write-Host ""
     $answer = Read-Host "ZIP-Datei und urspruenglichen Entpack-Ordner in den Papierkorb verschieben? (j/n)"

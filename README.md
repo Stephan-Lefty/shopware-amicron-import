@@ -113,14 +113,21 @@ Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
    sie aus `config.ini.example` erzeugt, wobei der `import_folder`-Pfad
    automatisch korrekt (absolut) eingetragen wird. `shop_url`,
    `client_id`, `client_secret` müssen danach von Hand ergänzt werden.
-5. **Desktop-Verknüpfung anlegen** — `Shopware Bestellimport (vX.Y.Z).lnk`
+5. **Desktop-Verknüpfung anlegen/aktualisieren** — `Shopware Bestellimport (vX.Y.Z).lnk`
    mit `import_orders.ico` als Icon, Ziel ist `import_orders.py` am
    festen Zielort. Die Versionsnummer kommt aus der `VERSION`-Datei und
    steht damit direkt als Text unter dem Desktop-Icon — so ist auf einen
-   Blick erkennbar, ob die aktuelle Version installiert ist. Beim
-   erneuten Ausführen des Setups wird eine ältere/anders benannte
-   Verknüpfung automatisch entfernt.
-6. **Aufräumen (optional)** — falls Schritt 0 tatsächlich kopiert hat,
+   Blick erkennbar, ob die aktuelle Version installiert ist. Eine bereits
+   vorhandene ältere/anders benannte Verknüpfung wird dabei **umbenannt**
+   statt gelöscht+neu angelegt, damit sie ihre Position auf dem Desktop
+   behält. Der Desktop wird anschließend automatisch neu gezeichnet
+   (kein manuelles F5 nötig).
+6. **Änderungsprotokoll öffnen** — bei einer Erstinstallation oder wenn
+   tatsächlich eine andere Version installiert wird, öffnet sich
+   automatisch ein Browser-Tab mit dem [Änderungsprotokoll](#änderungsprotokoll)
+   dieses READMEs auf GitHub, damit sofort sichtbar ist, was sich geändert
+   hat. Bei einem erneuten Lauf ohne Versionswechsel passiert das nicht.
+7. **Aufräumen (optional)** — falls Schritt 0 tatsächlich kopiert hat,
    fragt das Script am Ende: *"ZIP-Datei und ursprünglichen Entpack-Ordner
    in den Papierkorb verschieben? (j/n)"*. Bei "j" wandern die
    ursprüngliche ZIP-Datei und der Downloads-Entpack-Ordner in den
@@ -243,7 +250,23 @@ Shop ggf. überprüfen/ändern:
   HaBeFa.de funktionierenden Importdefinition, die `EMAIL` ebenfalls
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
+## Bugs melden
+
+Fehler oder Ideen für nächste Schritte bitte unter
+[github.com/Stephan-Lefty/shopware-amicron-import/issues](https://github.com/Stephan-Lefty/shopware-amicron-import/issues)
+eintragen.
+
+## Lizenz
+
+MIT, siehe [LICENSE](LICENSE).
+
 ## Änderungsprotokoll
+
+### 1.7.0 (2026-08-06)
+- Setup öffnet bei Erstinstallation oder Versionswechsel automatisch das
+  Änderungsprotokoll dieses READMEs im Browser
+- `LICENSE` (MIT) und "Bugs melden"-Abschnitt (Link zu GitHub Issues)
+  ergänzt
 
 ### 1.6.0 (2026-08-06)
 - Beim Update wird die alte Desktop-Verknüpfung jetzt umbenannt statt
