@@ -118,11 +118,11 @@ Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
    festen Zielort. Die Versionsnummer kommt aus der `VERSION`-Datei und
    steht damit direkt als Text unter dem Desktop-Icon — so ist auf einen
    Blick erkennbar, ob die aktuelle Version installiert ist. Eine bereits
-   vorhandene ältere/anders benannte Verknüpfung wird dabei **umbenannt**
-   statt gelöscht+neu angelegt, damit sie ihre Position auf dem Desktop
-   behält; Windows wird dabei gezielt nur über diese eine Änderung
-   informiert (kein kompletter Desktop-Refresh, der die Icon-Anordnung
-   durcheinanderbringen könnte).
+   vorhandene ältere/anders benannte Verknüpfung wird entfernt und neu
+   angelegt. **Hinweis:** Windows lässt sich dabei nicht zuverlässig dazu
+   bringen, die bisherige Desktop-Position beizubehalten (auch nicht über
+   gezielte Shell-Benachrichtigungen) — nach einem Update daher ggf. das
+   Icon per Hand an die gewünschte Stelle ziehen.
 6. **Änderungsprotokoll öffnen** — bei einer Erstinstallation oder wenn
    tatsächlich eine andere Version installiert wird, öffnet sich ein
    Browser-Tab mit dem [Änderungsprotokoll](#änderungsprotokoll) dieses
@@ -130,20 +130,18 @@ Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
    geschlossen wurde** (ein Hintergrundprozess wartet darauf), nicht
    während der Nutzer die Setup-Ausgabe noch liest. Bei einem erneuten
    Lauf ohne Versionswechsel passiert das nicht.
-7. **Aufräumen (optional)** — falls Schritt 0 tatsächlich kopiert hat,
-   fragt das Script am Ende: *"ZIP-Datei und ursprünglichen Entpack-Ordner
-   in den Papierkorb verschieben? (j/n)"*. Bei "j" wandern die
-   ursprüngliche ZIP-Datei und der Downloads-Entpack-Ordner in den
-   Papierkorb (nicht endgültig gelöscht) — übrig bleibt nur noch das
-   fertig installierte Tool am festen Zielort.
+7. **Aufräum-Hinweis** — falls Schritt 0 tatsächlich kopiert hat, zeigt
+   das Script am Ende einen Hinweis, dass die ursprüngliche ZIP-Datei und
+   der Entpack-Ordner nach dem Schließen dieses Fensters manuell gelöscht
+   werden können (kein automatisches Löschen mehr).
 
 Eine Neuinstallation (neuer PC, frisches Windows) bedeutet danach nur
 noch: ZIP irgendwo entpacken, `.bat` doppelklicken, `config.ini` mit den
-drei Shopware-Werten befüllen, Aufräumen-Frage mit "j" beantworten —
-fertig. Ein **Update** auf eine neue Version läuft genauso: neue ZIP
-entpacken und `.bat` ausführen — Programmdateien werden am Zielort
-überschrieben, die Desktop-Verknüpfung automatisch mit der neuen
-Versionsnummer neu angelegt.
+drei Shopware-Werten befüllen — fertig. Ein **Update** auf eine neue
+Version läuft genauso: neue ZIP entpacken und `.bat` ausführen —
+Programmdateien werden am Zielort überschrieben, die Desktop-Verknüpfung
+automatisch mit der neuen Versionsnummer neu angelegt (Position ggf. per
+Hand nachziehen).
 
 ## 4. Ordnerstruktur
 
@@ -234,11 +232,14 @@ Shop ggf. überprüfen/ändern:
   verwenden.
 - **winget-Paket-ID Groß-/Kleinschreibung** → die korrekte ID ist
   `Python.Python.3.12` (großes P in der Mitte), nicht `Python.python.3.12`.
-- **"Der Prozess kann nicht auf die Datei zugreifen" beim Papierkorb-Schritt**
-  → das Setup-Script kann seinen eigenen, gerade laufenden Ordner nicht
-  direkt löschen (Datei ist "in Benutzung"). Die Löschung dieses Ordners
-  läuft deshalb leicht verzögert in einem unsichtbaren Hintergrundprozess,
-  der erst startet, nachdem das Setup-Script selbst beendet ist.
+- **Desktop-Icon-Position geht bei einem Update verloren** → ausprobiert
+  wurden sowohl ein einfaches Löschen+Neuanlegen der Verknüpfung als auch
+  ein Umbenennen an Ort und Stelle mit gezielter Shell-Benachrichtigung
+  (`SHCNE_RENAMEITEM`) — beides hat die Windows-interne Positions-
+  Zuordnung nicht zuverlässig beibehalten (auch unabhängig von den
+  Ansicht-Einstellungen "Automatisch anordnen"/"Am Raster ausrichten").
+  Das Icon einfach nach einem Update per Hand an die gewünschte Stelle
+  ziehen.
 - **Netzlaufwerke in Faktura nicht sichtbar** → falls Faktura auf einem
   Server läuft und über RDP bedient wird: gemappte Netzlaufwerke sind
   nur in der Windows-Sitzung sichtbar, in der sie erstellt wurden;
@@ -254,6 +255,15 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.9.0 (2026-08-06)
+- Automatisches Erhalten der Desktop-Icon-Position beim Update wieder
+  entfernt — funktionierte trotz mehrerer Ansätze nicht zuverlässig.
+  Verknüpfung wird jetzt einfach entfernt und neu angelegt; Position bei
+  Bedarf per Hand nachziehen
+- Automatisches Löschen von ZIP-Datei und Entpack-Ordner (Papierkorb)
+  entfernt — stattdessen zeigt das Setup am Ende nur noch einen Hinweis,
+  dass beides nach dem Schließen des Fensters manuell gelöscht werden kann
 
 ### 1.8.1 (2026-08-06)
 - Papierkorb-Aufräumen wartet jetzt (genau wie das Öffnen des

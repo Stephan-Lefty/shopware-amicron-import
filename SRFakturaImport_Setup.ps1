@@ -11,11 +11,15 @@
 #   3. Ordnerstruktur anlegen
 #   4. config.ini aus der Vorlage anlegen (falls noch nicht vorhanden) und den
 #      import_folder-Pfad automatisch korrekt eintragen
-#   5. Desktop-Verknuepfung mit Icon anlegen (inkl. Versionsnummer im Namen)
+#   5. Desktop-Verknuepfung mit Icon anlegen (inkl. Versionsnummer im Namen).
+#      Eine bereits vorhandene aeltere Verknuepfung wird entfernt und neu
+#      angelegt - die Position auf dem Desktop muss danach ggf. per Hand
+#      neu gesetzt werden (Windows speichert Icon-Positionen nicht
+#      zuverlaessig ueber einen Dateinamenswechsel hinweg).
 #   6. Bei Erstinstallation oder Versionswechsel: Aenderungsprotokoll auf
 #      GitHub im Browser oeffnen, sobald das Konsolenfenster geschlossen wird
-#   7. Optional: urspruenglichen Download-/Entpack-Ordner und ZIP-Datei in
-#      den Papierkorb verschieben
+#   7. Hinweis anzeigen, dass ZIP-Datei und Entpack-Ordner nach dem
+#      Schliessen dieses Fensters manuell geloescht werden koennen
 #
 # Aufruf: Rechtsklick > "Mit PowerShell ausfuehren", oder per Doppelklick auf
 # SRFakturaImport_Setup.bat im selben Ordner. Kann von einem beliebigen Ort
@@ -32,12 +36,10 @@ $PermanentRoot = "C:\SRFakturaImport\scripts\shopware-amicron-import"
 $ChangelogUrl = "https://github.com/Stephan-Lefty/shopware-amicron-import#%C3%A4nderungsprotokoll"
 $OpenChangelog = $false
 
-# PID des Elternprozesses (cmd.exe aus der .bat-Datei) - dessen Arbeits-
-# verzeichnis ist der Ordner, aus dem dieses Script gestartet wurde. Solange
-# dieses Fenster offen ist (auch beim "Druecke eine beliebige Taste"-Schritt
-# der .bat-Datei), verweigert Windows das Loeschen dieses Ordners. Hinter-
-# grundaufgaben, die diesen Ordner loeschen oder danach etwas oeffnen sollen,
-# muessen deshalb erst warten, bis dieser Prozess beendet ist.
+# PID des Elternprozesses (cmd.exe aus der .bat-Datei) - solange dessen
+# Fenster offen ist (auch beim "Druecke eine beliebige Taste"-Schritt),
+# blockiert es u.a. den Ordner, aus dem es gestartet wurde. Wird fuer das
+# verzoegerte Oeffnen des Aenderungsprotokolls benoetigt.
 $ParentProcessId = (Get-CimInstance Win32_Process -Filter "ProcessId = $PID" -ErrorAction SilentlyContinue).ParentProcessId
 
 if ($OriginalDir -ne $PermanentRoot) {
@@ -148,6 +150,10 @@ if (-not (Test-Path $ConfigPath)) {
 }
 
 # --- 5. Desktop-Verknuepfung mit Icon (inkl. Versionsnummer im Namen) -----
+# Hinweis: Eine aeltere Verknuepfung wird entfernt und neu angelegt (nicht
+# umbenannt) - Windows liess sich nicht zuverlaessig dazu bringen, die
+# Desktop-Position dabei beizubehalten. Nach einem Update ggf. das neue
+# Icon per Hand an die gewuenschte Stelle ziehen.
 $VersionPath = Join-Path $ScriptDir "VERSION"
 $Version = if (Test-Path $VersionPath) { (Get-Content $VersionPath -Raw).Trim() } else { "" }
 $LinkName = if ($Version) { "Shopware Bestellimport (v$Version).lnk" } else { "Shopware Bestellimport.lnk" }
@@ -157,36 +163,12 @@ $IconPath = Join-Path $ScriptDir "import_orders.ico"
 $TargetPy = Join-Path $ScriptDir "import_orders.py"
 $LinkPath = Join-Path $DesktopPath $LinkName
 
-Add-Type -Namespace WinAPI -Name Explorer -MemberDefinition @"
-[System.Runtime.InteropServices.DllImport("Shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
-public static extern void SHChangeNotify(int eventId, int flags, string item1, string item2);
-"@
-$SHCNE_RENAMEITEM = 0x00000001
-$SHCNE_UPDATEDIR  = 0x00001000
-$SHCNF_PATHW      = 0x0005
-
-# Vorhandene Verknuepfung(en) mit anderer/ohne Versionsnummer finden.
 # Bewusst ohne -Filter (der Parameter kann bei Klammern/Leerzeichen im
 # Dateinamen unzuverlaessig sein) - stattdessen alle Dateien auflisten und
 # per -like abgleichen.
-$existingLinks = Get-ChildItem -Path $DesktopPath -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -like "Shopware Bestellimport*.lnk" }
-
-$renamedFrom = $null
-if ($existingLinks) {
-    # Die erste gefundene Verknuepfung wird an Ort und Stelle umbenannt
-    # (nicht geloescht+neu angelegt), damit Windows ihre Desktop-Position
-    # beibehaelt. Eventuelle weitere/doppelte alte Verknuepfungen werden
-    # entfernt.
-    $keep = $existingLinks | Select-Object -First 1
-    if ($keep.FullName -ne $LinkPath) {
-        $renamedFrom = $keep.FullName
-        Rename-Item -Path $keep.FullName -NewName $LinkName -Force
-    }
-    $existingLinks | Select-Object -Skip 1 |
-        Where-Object { $_.FullName -ne $LinkPath } |
-        Remove-Item -Force -ErrorAction SilentlyContinue
-}
+Get-ChildItem -Path $DesktopPath -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -like "Shopware Bestellimport*.lnk" -and $_.FullName -ne $LinkPath } |
+    Remove-Item -Force -ErrorAction SilentlyContinue
 
 $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut($LinkPath)
@@ -196,16 +178,16 @@ if (Test-Path $IconPath) { $Shortcut.IconLocation = $IconPath }
 $Shortcut.Description = "Holt offene Shopware-Bestellungen und schreibt sie als XML fuer den Amicron-Faktura-Import"
 $Shortcut.Save()
 Write-Host "Desktop-Verknuepfung angelegt: $LinkPath" -ForegroundColor Green
+Write-Host "Hinweis: Falls sich die Icon-Position geaendert hat, bitte per Hand an die gewuenschte Stelle ziehen." -ForegroundColor Yellow
 
-# Windows gezielt ueber die Aenderung informieren, statt einen kompletten
-# Desktop-Refresh zu erzwingen (der die Icon-Anordnung durcheinanderbringen
-# kann). Bei einem Rename wird die Positions-Zuordnung so beibehalten.
+# Windows zwingen, den Desktop neu zu zeichnen, damit die Aenderung sofort
+# sichtbar ist (kein manuelles F5 noetig).
 try {
-    if ($renamedFrom) {
-        [WinAPI.Explorer]::SHChangeNotify($SHCNE_RENAMEITEM, $SHCNF_PATHW, $renamedFrom, $LinkPath)
-    } else {
-        [WinAPI.Explorer]::SHChangeNotify($SHCNE_UPDATEDIR, $SHCNF_PATHW, $DesktopPath, $null)
-    }
+    Add-Type -Namespace WinAPI -Name Explorer -MemberDefinition @"
+[System.Runtime.InteropServices.DllImport("Shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+public static extern void SHChangeNotify(int eventId, int flags, string item1, string item2);
+"@
+    [WinAPI.Explorer]::SHChangeNotify(0x00001000, 0x0005, $DesktopPath, $null)
 } catch {
     Write-Warning "Desktop konnte nicht automatisch aktualisiert werden - ggf. manuell F5 druecken."
 }
@@ -240,41 +222,9 @@ Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
     }
 }
 
-# --- 7. Aufraeumen (optional) ----------------------------------------------
+# --- 7. Aufraeum-Hinweis (kein automatisches Loeschen mehr) ----------------
 if ($OriginalDir -ne $PermanentRoot) {
     Write-Host ""
-    $answer = Read-Host "ZIP-Datei und urspruenglichen Entpack-Ordner in den Papierkorb verschieben? (j/n)"
-    if ($answer -match "^[jJ]") {
-        # Bewusst ohne -Filter (siehe oben) - alle ZIPs im Elternordner
-        # auflisten und per -like abgleichen.
-        $ZipCandidate = Get-ChildItem -Path (Split-Path $OriginalDir -Parent) -File -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -like "SRFakturaImport*.zip" } |
-            Select-Object -First 1
-
-        # Sowohl die ZIP als auch der eigene, gerade laufende Ordner werden in
-        # einem separaten Hilfsscript geloescht, das erst startet, NACHDEM
-        # das Konsolenfenster (cmd.exe) komplett geschlossen wurde - solange
-        # dessen Arbeitsverzeichnis noch in $OriginalDir liegt, verweigert
-        # Windows das Loeschen dieses Ordners (auch mit Verzoegerung). Das
-        # Hilfsscript entfernt sich danach selbst.
-        $cleanupHelper = Join-Path $env:TEMP "srfaktura_cleanup_$([guid]::NewGuid().ToString('N')).ps1"
-        $zipLine = if ($ZipCandidate) {
-            "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('$($ZipCandidate.FullName)', 'OnlyErrorDialogs', 'SendToRecycleBin')"
-        } else { "" }
-        @"
-while (Get-Process -Id $ParentProcessId -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }
-Add-Type -AssemblyName Microsoft.VisualBasic
-$zipLine
-if (Test-Path -LiteralPath '$OriginalDir') {
-    [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory('$OriginalDir', 'OnlyErrorDialogs', 'SendToRecycleBin')
-}
-Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
-"@ | Set-Content -Path $cleanupHelper -Encoding UTF8
-
-        Start-Process -FilePath "powershell.exe" `
-            -ArgumentList @("-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", $cleanupHelper) `
-            -WindowStyle Hidden
-        Write-Host "ZIP-Datei und Entpack-Ordner werden in den Papierkorb verschoben, sobald dieses Fenster geschlossen wird." -ForegroundColor Green
-        Write-Host "Nur noch das fertig installierte Tool unter $ScriptDir ist dann vorhanden." -ForegroundColor Green
-    }
+    Write-Host "Die ZIP-Datei und der entpackte Ordner ($OriginalDir) koennen" -ForegroundColor Cyan
+    Write-Host "nach dem Schliessen dieses Fensters manuell geloescht werden." -ForegroundColor Cyan
 }
