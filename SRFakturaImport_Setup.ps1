@@ -1,22 +1,37 @@
 # Komplettes Setup fuer den Shopware-Amicron-Bestellimport.
 # Fuehrt alle Schritte aus, die bisher von Hand gemacht wurden:
+#   0. Programmdateien an den festen, dauerhaften Zielort kopieren
+#      (falls von woanders aus gestartet, z.B. aus einem entpackten
+#      Download-Ordner)
 #   1. Python pruefen / installieren (winget, mit Fallback auf Direkt-Download)
 #   2. Benoetigte Python-Bibliothek installieren (requests)
 #   3. Ordnerstruktur anlegen
 #   4. config.ini aus der Vorlage anlegen (falls noch nicht vorhanden) und den
 #      import_folder-Pfad automatisch korrekt eintragen
-#   5. Desktop-Verknuepfung mit Icon anlegen
-#
-# Voraussetzung: Dieses Script liegt im selben Ordner wie import_orders.py,
-# import_orders.ico und config.ini.example (kompletter Projektordner mitkopiert).
+#   5. Desktop-Verknuepfung mit Icon anlegen (inkl. Versionsnummer im Namen)
+#   6. Optional: urspruenglichen Download-/Entpack-Ordner und ZIP-Datei in
+#      den Papierkorb verschieben
 #
 # Aufruf: Rechtsklick > "Mit PowerShell ausfuehren", oder per Doppelklick auf
-# SRFakturaImport_Setup.bat im selben Ordner.
+# SRFakturaImport_Setup.bat im selben Ordner. Kann von einem beliebigen Ort
+# gestartet werden (z.B. direkt aus einem entpackten ZIP im Downloads-Ordner).
 
 $ErrorActionPreference = "Stop"
-$ScriptDir = $PSScriptRoot
 
 Write-Host "=== SRFakturaImport Setup ===" -ForegroundColor Cyan
+
+# --- 0. Programmdateien an den festen Zielort kopieren --------------------
+$OriginalDir = $PSScriptRoot
+$PermanentRoot = "C:\SRFakturaImport\scripts\shopware-amicron-import"
+
+if ($OriginalDir -ne $PermanentRoot) {
+    Write-Host "Kopiere Programmdateien nach $PermanentRoot ..." -ForegroundColor Cyan
+    New-Item -ItemType Directory -Force -Path $PermanentRoot | Out-Null
+    Copy-Item -Path (Join-Path $OriginalDir "*") -Destination $PermanentRoot -Recurse -Force
+    $ScriptDir = $PermanentRoot
+} else {
+    $ScriptDir = $OriginalDir
+}
 
 # --- 1. Python pruefen / installieren -----------------------------------
 function Test-PythonAvailable {
@@ -113,6 +128,29 @@ Write-Host "Desktop-Verknuepfung angelegt: $LinkPath" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "=== Setup abgeschlossen ===" -ForegroundColor Cyan
+Write-Host "Installiert in: $ScriptDir" -ForegroundColor Yellow
 Write-Host "Letzter manueller Schritt: config.ini oeffnen und shop_url / client_id / client_secret eintragen." -ForegroundColor Yellow
 Write-Host "In Faktura als XML-Ordner einstellen: $ImportFolder" -ForegroundColor Yellow
 Write-Host "Optional als Nach-Import-Ordner in Faktura: $ErledigtFolder" -ForegroundColor Yellow
+
+# --- 6. Aufraeumen (optional) ----------------------------------------------
+if ($OriginalDir -ne $PermanentRoot) {
+    Write-Host ""
+    $answer = Read-Host "ZIP-Datei und urspruenglichen Entpack-Ordner in den Papierkorb verschieben? (j/n)"
+    if ($answer -match "^[jJ]") {
+        Add-Type -AssemblyName Microsoft.VisualBasic
+
+        $ZipCandidate = Get-ChildItem -Path (Split-Path $OriginalDir -Parent) -Filter "SRFakturaImport*.zip" -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($ZipCandidate) {
+            [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(
+                $ZipCandidate.FullName, "OnlyErrorDialogs", "SendToRecycleBin")
+            Write-Host "ZIP-Datei in den Papierkorb verschoben: $($ZipCandidate.FullName)" -ForegroundColor Green
+        }
+
+        [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(
+            $OriginalDir, "OnlyErrorDialogs", "SendToRecycleBin")
+        Write-Host "Entpack-Ordner in den Papierkorb verschoben: $OriginalDir" -ForegroundColor Green
+        Write-Host "Nur noch das fertig installierte Tool unter $ScriptDir ist vorhanden." -ForegroundColor Green
+    }
+}

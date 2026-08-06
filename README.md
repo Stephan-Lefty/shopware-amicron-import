@@ -85,20 +85,17 @@ Einzustellen ist nur, **woher** Faktura die Dateien liest:
 ## 3. Installation des Tools (was die `.bat`-Datei macht)
 
 Voraussetzung: die ZIP-Datei wurde irgendwo auf dem Ziel-PC entpackt
-(Downloads-Ordner reicht völlig aus) — der Ordner `shopware-amicron-import`
-darin kann an **beliebiger Stelle** liegen, das Setup-Script findet alles
-relativ zu sich selbst. Nur der Faktura-Import-Ordner selbst
-(`C:\SRFakturaImport\amicron\import`) ist ein fester, davon unabhängiger
-Pfad (siehe Abschnitt "Ordnerstruktur").
-
-Empfehlung (kein Muss): `config.ini` enthält echte Zugangsdaten — daher
-den Ordner eher an einen dauerhaften Ort verschieben statt in Downloads
-liegen zu lassen, wo er beim gelegentlichen Aufräumen versehentlich
-gelöscht werden könnte.
+(Downloads-Ordner reicht völlig aus) — von dort übernimmt das Setup den
+Rest automatisch.
 
 Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
 `SRFakturaImport_Setup.ps1` und führt automatisch aus:
 
+0. **Programmdateien an den festen Zielort kopieren** — falls das Script
+   nicht schon direkt in `C:\SRFakturaImport\scripts\shopware-amicron-import\`
+   liegt (z. B. weil die ZIP in Downloads entpackt wurde), werden alle
+   Dateien dorthin kopiert. Alle folgenden Schritte laufen dann auf
+   dieser dauerhaften Kopie.
 1. **Python prüfen/installieren** — falls `python` nicht gefunden wird,
    Installation über `winget install --id Python.Python.3.12`; falls
    winget nicht verfügbar ist, Fallback auf Direkt-Download des
@@ -107,25 +104,32 @@ Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
    Konsole ist nicht nötig.
 2. **Bibliothek installieren** — `pip install requests`
 3. **Ordnerstruktur anlegen** — `C:\SRFakturaImport\amicron\import\erledigt`
-   (fester Pfad, unabhängig davon, wo der Script-Ordner selbst liegt)
+   (fester Pfad, unabhängig vom Programmordner)
 4. **`config.ini` vorbereiten** — falls noch keine vorhanden ist, wird
    sie aus `config.ini.example` erzeugt, wobei der `import_folder`-Pfad
    automatisch korrekt (absolut) eingetragen wird. `shop_url`,
    `client_id`, `client_secret` müssen danach von Hand ergänzt werden.
 5. **Desktop-Verknüpfung anlegen** — `Shopware Bestellimport (vX.Y.Z).lnk`
-   mit `import_orders.ico` als Icon, Ziel ist `import_orders.py`. Die
-   Versionsnummer kommt aus der `VERSION`-Datei und steht damit direkt
-   als Text unter dem Desktop-Icon — so ist auf einen Blick erkennbar,
-   ob die aktuelle Version installiert ist. Beim erneuten Ausführen des
-   Setups wird eine ältere/anders benannte Verknüpfung automatisch
-   entfernt, damit nicht mehrere Icons parallel auf dem Desktop liegen.
+   mit `import_orders.ico` als Icon, Ziel ist `import_orders.py` am
+   festen Zielort. Die Versionsnummer kommt aus der `VERSION`-Datei und
+   steht damit direkt als Text unter dem Desktop-Icon — so ist auf einen
+   Blick erkennbar, ob die aktuelle Version installiert ist. Beim
+   erneuten Ausführen des Setups wird eine ältere/anders benannte
+   Verknüpfung automatisch entfernt.
+6. **Aufräumen (optional)** — falls Schritt 0 tatsächlich kopiert hat,
+   fragt das Script am Ende: *"ZIP-Datei und ursprünglichen Entpack-Ordner
+   in den Papierkorb verschieben? (j/n)"*. Bei "j" wandern die
+   ursprüngliche ZIP-Datei und der Downloads-Entpack-Ordner in den
+   Papierkorb (nicht endgültig gelöscht) — übrig bleibt nur noch das
+   fertig installierte Tool am festen Zielort.
 
 Eine Neuinstallation (neuer PC, frisches Windows) bedeutet danach nur
-noch: Ordner kopieren, `.bat` doppelklicken, `config.ini` mit den drei
-Shopware-Werten befüllen — fertig. Ein **Update** auf eine neue Version
-läuft genauso: Dateien überschreiben (inkl. der neuen `VERSION`-Datei),
-`.bat` erneut ausführen — die Desktop-Verknüpfung wird automatisch mit
-der neuen Versionsnummer neu angelegt.
+noch: ZIP irgendwo entpacken, `.bat` doppelklicken, `config.ini` mit den
+drei Shopware-Werten befüllen, Aufräumen-Frage mit "j" beantworten —
+fertig. Ein **Update** auf eine neue Version läuft genauso: neue ZIP
+entpacken und `.bat` ausführen — Programmdateien werden am Zielort
+überschrieben, die Desktop-Verknüpfung automatisch mit der neuen
+Versionsnummer neu angelegt.
 
 ## 4. Ordnerstruktur
 
@@ -231,6 +235,15 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.4.0 (2026-08-06)
+- Setup kopiert sich jetzt selbst an einen festen, dauerhaften Zielort
+  (`C:\SRFakturaImport\scripts\shopware-amicron-import`), egal von wo
+  aus es gestartet wird (z. B. direkt aus einem in Downloads entpackten
+  ZIP-Ordner)
+- Am Ende des Setups optionale Abfrage: ursprüngliche ZIP-Datei und
+  Entpack-Ordner in den Papierkorb verschieben, sodass nur noch das
+  fertig installierte Tool übrig bleibt
 
 ### 1.3.0 (2026-08-06)
 - Zentrale `VERSION`-Datei als Versionsquelle eingeführt
