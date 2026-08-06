@@ -178,9 +178,17 @@ if ($OriginalDir -ne $PermanentRoot) {
             Write-Host "ZIP-Datei in den Papierkorb verschoben: $($ZipCandidate.FullName)" -ForegroundColor Green
         }
 
-        [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(
-            $OriginalDir, "OnlyErrorDialogs", "SendToRecycleBin")
-        Write-Host "Entpack-Ordner in den Papierkorb verschoben: $OriginalDir" -ForegroundColor Green
+        # Der eigene Ordner kann nicht direkt geloescht werden, waehrend
+        # dieses Script noch daraus laeuft (Datei "in Benutzung"). Die
+        # Loeschung laeuft deshalb leicht verzoegert in einem separaten,
+        # unsichtbaren Hintergrundprozess, der erst startet, nachdem dieses
+        # Script beendet ist und die Datei freigegeben hat.
+        $helperCommand = "Start-Sleep -Seconds 2; Add-Type -AssemblyName Microsoft.VisualBasic; " +
+            "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory('$OriginalDir', 'OnlyErrorDialogs', 'SendToRecycleBin')"
+        Start-Process -FilePath "powershell.exe" `
+            -ArgumentList @("-NoProfile", "-WindowStyle", "Hidden", "-Command", $helperCommand) `
+            -WindowStyle Hidden
+        Write-Host "Entpack-Ordner wird in Kuerze in den Papierkorb verschoben (im Hintergrund)." -ForegroundColor Green
         Write-Host "Nur noch das fertig installierte Tool unter $ScriptDir ist vorhanden." -ForegroundColor Green
     }
 }

@@ -224,6 +224,11 @@ Shop ggf. überprüfen/ändern:
   verwenden.
 - **winget-Paket-ID Groß-/Kleinschreibung** → die korrekte ID ist
   `Python.Python.3.12` (großes P in der Mitte), nicht `Python.python.3.12`.
+- **"Der Prozess kann nicht auf die Datei zugreifen" beim Papierkorb-Schritt**
+  → das Setup-Script kann seinen eigenen, gerade laufenden Ordner nicht
+  direkt löschen (Datei ist "in Benutzung"). Die Löschung dieses Ordners
+  läuft deshalb leicht verzögert in einem unsichtbaren Hintergrundprozess,
+  der erst startet, nachdem das Setup-Script selbst beendet ist.
 - **Netzlaufwerke in Faktura nicht sichtbar** → falls Faktura auf einem
   Server läuft und über RDP bedient wird: gemappte Netzlaufwerke sind
   nur in der Windows-Sitzung sichtbar, in der sie erstellt wurden;
@@ -239,6 +244,12 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.5.1 (2026-08-06)
+- Papierkorb-Aufräumschritt behoben: Löschen des eigenen (noch laufenden)
+  Entpack-Ordners scheiterte mit "Datei wird von einem anderen Prozess
+  verwendet" — läuft jetzt verzögert in einem Hintergrundprozess, der erst
+  nach Beendigung des Setup-Scripts startet
 
 ### 1.5.0 (2026-08-06)
 - Setup erkennt eine bereits vorhandene Installation (anhand der
