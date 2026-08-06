@@ -245,6 +245,11 @@ Shop ggf. überprüfen/ändern:
 
 ## Änderungsprotokoll
 
+### 1.5.2 (2026-08-06)
+- Desktop wird nach dem Setup automatisch neu gezeichnet (`SHChangeNotify`),
+  damit gelöschte alte Verknüpfungen sofort verschwinden, ohne dass
+  manuell F5 gedrückt werden muss
+
 ### 1.5.1 (2026-08-06)
 - Papierkorb-Aufräumschritt behoben: Löschen des eigenen (noch laufenden)
   Entpack-Ordners scheiterte mit "Datei wird von einem anderen Prozess

@@ -159,6 +159,19 @@ $Shortcut.Description = "Holt offene Shopware-Bestellungen und schreibt sie als 
 $Shortcut.Save()
 Write-Host "Desktop-Verknuepfung angelegt: $LinkPath" -ForegroundColor Green
 
+# Windows zwingen, den Desktop sofort neu zu zeichnen - sonst zeigt der
+# Explorer geloeschte/neue Verknuepfungen manchmal erst nach einem
+# manuellen F5 korrekt an.
+try {
+    Add-Type -Namespace WinAPI -Name Explorer -MemberDefinition @"
+[System.Runtime.InteropServices.DllImport("Shell32.dll")]
+public static extern int SHChangeNotify(int eventId, int flags, IntPtr item1, IntPtr item2);
+"@
+    [WinAPI.Explorer]::SHChangeNotify(0x8000000, 0x1000, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
+} catch {
+    Write-Warning "Desktop konnte nicht automatisch aktualisiert werden - ggf. manuell F5 druecken."
+}
+
 Write-Host ""
 Write-Host "=== Setup abgeschlossen ===" -ForegroundColor Cyan
 Write-Host "Installiert in: $ScriptDir" -ForegroundColor Yellow
