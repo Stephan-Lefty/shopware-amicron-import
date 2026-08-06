@@ -250,16 +250,6 @@ Shop ggf. überprüfen/ändern:
   HaBeFa.de funktionierenden Importdefinition, die `EMAIL` ebenfalls
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
-## Bugs melden
-
-Fehler oder Ideen für nächste Schritte bitte unter
-[github.com/Stephan-Lefty/shopware-amicron-import/issues](https://github.com/Stephan-Lefty/shopware-amicron-import/issues)
-eintragen.
-
-## Lizenz
-
-MIT, siehe [LICENSE](LICENSE).
-
 ## Änderungsprotokoll
 
 ### 1.7.0 (2026-08-06)
@@ -338,3 +328,13 @@ MIT, siehe [LICENSE](LICENSE).
 - E-Mail-Zuordnungsfehler behoben (Tag in `billing`-Block verschoben)
 - Automatisiertes Setup per `SRFakturaImport_Setup.bat`
   (Python-Installation, Ordnerstruktur, `config.ini`, Desktop-Icon)
+
+## Bugs melden
+
+Fehler oder Ideen für nächste Schritte bitte unter
+[github.com/Stephan-Lefty/shopware-amicron-import/issues](https://github.com/Stephan-Lefty/shopware-amicron-import/issues)
+eintragen.
+
+## Lizenz
+
+MIT, siehe [LICENSE](LICENSE).
