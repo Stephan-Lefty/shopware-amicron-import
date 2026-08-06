@@ -256,6 +256,12 @@ Shop ggf. überprüfen/ändern:
 
 ## Änderungsprotokoll
 
+### 1.9.1 (2026-08-06)
+- Desktop-Refresh nach dem Setup wieder auf den ursprünglichen, bewährten
+  Befehl (`SHCNE_ASSOCCHANGED`) umgestellt — die gezieltere Variante
+  (`SHCNE_UPDATEDIR`) aus 1.8.x hat gelöschte alte Verknüpfungen nicht
+  zuverlässig sofort ausgeblendet (manuelles F5 war noch nötig)
+
 ### 1.9.0 (2026-08-06)
 - Automatisches Erhalten der Desktop-Icon-Position beim Update wieder
   entfernt — funktionierte trotz mehrerer Ansätze nicht zuverlässig.

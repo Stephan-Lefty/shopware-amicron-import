@@ -184,10 +184,10 @@ Write-Host "Hinweis: Falls sich die Icon-Position geaendert hat, bitte per Hand 
 # sichtbar ist (kein manuelles F5 noetig).
 try {
     Add-Type -Namespace WinAPI -Name Explorer -MemberDefinition @"
-[System.Runtime.InteropServices.DllImport("Shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
-public static extern void SHChangeNotify(int eventId, int flags, string item1, string item2);
+[System.Runtime.InteropServices.DllImport("Shell32.dll")]
+public static extern void SHChangeNotify(int eventId, int flags, IntPtr item1, IntPtr item2);
 "@
-    [WinAPI.Explorer]::SHChangeNotify(0x00001000, 0x0005, $DesktopPath, $null)
+    [WinAPI.Explorer]::SHChangeNotify(0x8000000, 0x1000, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
 } catch {
     Write-Warning "Desktop konnte nicht automatisch aktualisiert werden - ggf. manuell F5 druecken."
 }
