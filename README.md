@@ -245,6 +245,11 @@ Shop ggf. überprüfen/ändern:
 
 ## Änderungsprotokoll
 
+### 1.6.0 (2026-08-06)
+- Beim Update wird die alte Desktop-Verknüpfung jetzt umbenannt statt
+  gelöscht und neu angelegt — dadurch behält das Icon seine bisherige
+  Position auf dem Desktop, statt an eine neue Stelle zu springen
+
 ### 1.5.2 (2026-08-06)
 - Desktop wird nach dem Setup automatisch neu gezeichnet (`SHChangeNotify`),
   damit gelöschte alte Verknüpfungen sofort verschwinden, ohne dass

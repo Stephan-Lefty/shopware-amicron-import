@@ -141,14 +141,26 @@ $IconPath = Join-Path $ScriptDir "import_orders.ico"
 $TargetPy = Join-Path $ScriptDir "import_orders.py"
 $LinkPath = Join-Path $DesktopPath $LinkName
 
-# Alte Verknuepfungen mit anderer/ohne Versionsnummer entfernen, damit nach
-# einem Update nicht mehrere Icons gleichzeitig auf dem Desktop liegen.
+# Vorhandene Verknuepfung(en) mit anderer/ohne Versionsnummer finden.
 # Bewusst ohne -Filter (der Parameter kann bei Klammern/Leerzeichen im
 # Dateinamen unzuverlaessig sein) - stattdessen alle Dateien auflisten und
 # per -like abgleichen.
-Get-ChildItem -Path $DesktopPath -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -like "Shopware Bestellimport*.lnk" -and $_.FullName -ne $LinkPath } |
-    Remove-Item -Force -ErrorAction SilentlyContinue
+$existingLinks = Get-ChildItem -Path $DesktopPath -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -like "Shopware Bestellimport*.lnk" }
+
+if ($existingLinks) {
+    # Die erste gefundene Verknuepfung wird an Ort und Stelle umbenannt
+    # (nicht geloescht+neu angelegt), damit Windows ihre Desktop-Position
+    # beibehaelt. Eventuelle weitere/doppelte alte Verknuepfungen werden
+    # entfernt.
+    $keep = $existingLinks | Select-Object -First 1
+    if ($keep.FullName -ne $LinkPath) {
+        Rename-Item -Path $keep.FullName -NewName $LinkName -Force
+    }
+    $existingLinks | Select-Object -Skip 1 |
+        Where-Object { $_.FullName -ne $LinkPath } |
+        Remove-Item -Force -ErrorAction SilentlyContinue
+}
 
 $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut($LinkPath)
