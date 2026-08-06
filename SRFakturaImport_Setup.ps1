@@ -143,9 +143,12 @@ $LinkPath = Join-Path $DesktopPath $LinkName
 
 # Alte Verknuepfungen mit anderer/ohne Versionsnummer entfernen, damit nach
 # einem Update nicht mehrere Icons gleichzeitig auf dem Desktop liegen.
-Get-ChildItem -Path $DesktopPath -Filter "Shopware Bestellimport*.lnk" -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -ne $LinkPath } |
-    Remove-Item -Force
+# Bewusst ohne -Filter (der Parameter kann bei Klammern/Leerzeichen im
+# Dateinamen unzuverlaessig sein) - stattdessen alle Dateien auflisten und
+# per -like abgleichen.
+Get-ChildItem -Path $DesktopPath -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -like "Shopware Bestellimport*.lnk" -and $_.FullName -ne $LinkPath } |
+    Remove-Item -Force -ErrorAction SilentlyContinue
 
 $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut($LinkPath)
