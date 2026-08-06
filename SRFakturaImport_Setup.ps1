@@ -13,7 +13,7 @@
 #      import_folder-Pfad automatisch korrekt eintragen
 #   5. Desktop-Verknuepfung mit Icon anlegen (inkl. Versionsnummer im Namen)
 #   6. Bei Erstinstallation oder Versionswechsel: Aenderungsprotokoll auf
-#      GitHub im Browser oeffnen
+#      GitHub im Browser oeffnen, sobald das Konsolenfenster geschlossen wird
 #   7. Optional: urspruenglichen Download-/Entpack-Ordner und ZIP-Datei in
 #      den Papierkorb verschieben
 #
@@ -149,6 +149,14 @@ $IconPath = Join-Path $ScriptDir "import_orders.ico"
 $TargetPy = Join-Path $ScriptDir "import_orders.py"
 $LinkPath = Join-Path $DesktopPath $LinkName
 
+Add-Type -Namespace WinAPI -Name Explorer -MemberDefinition @"
+[System.Runtime.InteropServices.DllImport("Shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+public static extern void SHChangeNotify(int eventId, int flags, string item1, string item2);
+"@
+$SHCNE_RENAMEITEM = 0x00000001
+$SHCNE_UPDATEDIR  = 0x00001000
+$SHCNF_PATHW      = 0x0005
+
 # Vorhandene Verknuepfung(en) mit anderer/ohne Versionsnummer finden.
 # Bewusst ohne -Filter (der Parameter kann bei Klammern/Leerzeichen im
 # Dateinamen unzuverlaessig sein) - stattdessen alle Dateien auflisten und
@@ -156,6 +164,7 @@ $LinkPath = Join-Path $DesktopPath $LinkName
 $existingLinks = Get-ChildItem -Path $DesktopPath -File -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -like "Shopware Bestellimport*.lnk" }
 
+$renamedFrom = $null
 if ($existingLinks) {
     # Die erste gefundene Verknuepfung wird an Ort und Stelle umbenannt
     # (nicht geloescht+neu angelegt), damit Windows ihre Desktop-Position
@@ -163,6 +172,7 @@ if ($existingLinks) {
     # entfernt.
     $keep = $existingLinks | Select-Object -First 1
     if ($keep.FullName -ne $LinkPath) {
+        $renamedFrom = $keep.FullName
         Rename-Item -Path $keep.FullName -NewName $LinkName -Force
     }
     $existingLinks | Select-Object -Skip 1 |
@@ -179,15 +189,15 @@ $Shortcut.Description = "Holt offene Shopware-Bestellungen und schreibt sie als 
 $Shortcut.Save()
 Write-Host "Desktop-Verknuepfung angelegt: $LinkPath" -ForegroundColor Green
 
-# Windows zwingen, den Desktop sofort neu zu zeichnen - sonst zeigt der
-# Explorer geloeschte/neue Verknuepfungen manchmal erst nach einem
-# manuellen F5 korrekt an.
+# Windows gezielt ueber die Aenderung informieren, statt einen kompletten
+# Desktop-Refresh zu erzwingen (der die Icon-Anordnung durcheinanderbringen
+# kann). Bei einem Rename wird die Positions-Zuordnung so beibehalten.
 try {
-    Add-Type -Namespace WinAPI -Name Explorer -MemberDefinition @"
-[System.Runtime.InteropServices.DllImport("Shell32.dll")]
-public static extern int SHChangeNotify(int eventId, int flags, IntPtr item1, IntPtr item2);
-"@
-    [WinAPI.Explorer]::SHChangeNotify(0x8000000, 0x1000, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
+    if ($renamedFrom) {
+        [WinAPI.Explorer]::SHChangeNotify($SHCNE_RENAMEITEM, $SHCNF_PATHW, $renamedFrom, $LinkPath)
+    } else {
+        [WinAPI.Explorer]::SHChangeNotify($SHCNE_UPDATEDIR, $SHCNF_PATHW, $DesktopPath, $null)
+    }
 } catch {
     Write-Warning "Desktop konnte nicht automatisch aktualisiert werden - ggf. manuell F5 druecken."
 }
@@ -199,15 +209,27 @@ Write-Host "Letzter manueller Schritt: config.ini oeffnen und shop_url / client_
 Write-Host "In Faktura als XML-Ordner einstellen: $ImportFolder" -ForegroundColor Yellow
 Write-Host "Optional als Nach-Import-Ordner in Faktura: $ErledigtFolder" -ForegroundColor Yellow
 
-# Bei Erstinstallation oder einer tatsaechlich neuen Version das
-# Aenderungsprotokoll im Browser oeffnen, damit sofort sichtbar ist, was
-# sich geaendert hat. Nicht bei einem erneuten Lauf ohne Versionswechsel.
+# --- 6. Aenderungsprotokoll oeffnen (verzoegert, erst nach Fensterschluss) -
+# Bei Erstinstallation oder einer tatsaechlich neuen Version soll sich der
+# Browser oeffnen, aber erst NACHDEM das Konsolenfenster (cmd.exe aus der
+# .bat-Datei) geschlossen wurde - nicht waehrend der Nutzer noch die
+# Setup-Ausgabe liest. Dafuer wartet ein Hintergrundprozess, bis der
+# Elternprozess (cmd.exe) beendet ist.
 if ($OpenChangelog) {
-    Write-Host "Oeffne Aenderungsprotokoll im Browser ..." -ForegroundColor Cyan
+    Write-Host "Aenderungsprotokoll wird im Browser geoeffnet, sobald dieses Fenster geschlossen wird." -ForegroundColor Cyan
     try {
-        Start-Process $ChangelogUrl
+        $parentId = (Get-CimInstance Win32_Process -Filter "ProcessId = $PID").ParentProcessId
+        $changelogHelper = Join-Path $env:TEMP "srfaktura_changelog_$([guid]::NewGuid().ToString('N')).ps1"
+        @"
+while (Get-Process -Id $parentId -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }
+Start-Process '$ChangelogUrl'
+Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
+"@ | Set-Content -Path $changelogHelper -Encoding UTF8
+        Start-Process -FilePath "powershell.exe" `
+            -ArgumentList @("-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", $changelogHelper) `
+            -WindowStyle Hidden
     } catch {
-        Write-Warning "Browser konnte nicht automatisch geoeffnet werden: $ChangelogUrl"
+        Write-Warning "Aenderungsprotokoll konnte nicht automatisch geoeffnet werden: $ChangelogUrl"
     }
 }
 
@@ -216,27 +238,34 @@ if ($OriginalDir -ne $PermanentRoot) {
     Write-Host ""
     $answer = Read-Host "ZIP-Datei und urspruenglichen Entpack-Ordner in den Papierkorb verschieben? (j/n)"
     if ($answer -match "^[jJ]") {
-        Add-Type -AssemblyName Microsoft.VisualBasic
-
-        $ZipCandidate = Get-ChildItem -Path (Split-Path $OriginalDir -Parent) -Filter "SRFakturaImport*.zip" -ErrorAction SilentlyContinue |
+        # Bewusst ohne -Filter (siehe oben) - alle ZIPs im Elternordner
+        # auflisten und per -like abgleichen.
+        $ZipCandidate = Get-ChildItem -Path (Split-Path $OriginalDir -Parent) -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like "SRFakturaImport*.zip" } |
             Select-Object -First 1
-        if ($ZipCandidate) {
-            [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(
-                $ZipCandidate.FullName, "OnlyErrorDialogs", "SendToRecycleBin")
-            Write-Host "ZIP-Datei in den Papierkorb verschoben: $($ZipCandidate.FullName)" -ForegroundColor Green
-        }
 
-        # Der eigene Ordner kann nicht direkt geloescht werden, waehrend
-        # dieses Script noch daraus laeuft (Datei "in Benutzung"). Die
-        # Loeschung laeuft deshalb leicht verzoegert in einem separaten,
-        # unsichtbaren Hintergrundprozess, der erst startet, nachdem dieses
-        # Script beendet ist und die Datei freigegeben hat.
-        $helperCommand = "Start-Sleep -Seconds 2; Add-Type -AssemblyName Microsoft.VisualBasic; " +
-            "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory('$OriginalDir', 'OnlyErrorDialogs', 'SendToRecycleBin')"
+        # Sowohl die ZIP als auch der eigene, gerade laufende Ordner werden
+        # in einem separaten Hilfsscript geloescht, das erst nach kurzer
+        # Verzoegerung startet (damit dieses Script seine Dateien wieder
+        # freigegeben hat) und sich danach selbst entfernt.
+        $cleanupHelper = Join-Path $env:TEMP "srfaktura_cleanup_$([guid]::NewGuid().ToString('N')).ps1"
+        $zipLine = if ($ZipCandidate) {
+            "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('$($ZipCandidate.FullName)', 'OnlyErrorDialogs', 'SendToRecycleBin')"
+        } else { "" }
+        @"
+Start-Sleep -Seconds 2
+Add-Type -AssemblyName Microsoft.VisualBasic
+$zipLine
+if (Test-Path -LiteralPath '$OriginalDir') {
+    [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory('$OriginalDir', 'OnlyErrorDialogs', 'SendToRecycleBin')
+}
+Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
+"@ | Set-Content -Path $cleanupHelper -Encoding UTF8
+
         Start-Process -FilePath "powershell.exe" `
-            -ArgumentList @("-NoProfile", "-WindowStyle", "Hidden", "-Command", $helperCommand) `
+            -ArgumentList @("-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", $cleanupHelper) `
             -WindowStyle Hidden
-        Write-Host "Entpack-Ordner wird in Kuerze in den Papierkorb verschoben (im Hintergrund)." -ForegroundColor Green
+        Write-Host "ZIP-Datei und Entpack-Ordner werden in Kuerze in den Papierkorb verschoben (im Hintergrund)." -ForegroundColor Green
         Write-Host "Nur noch das fertig installierte Tool unter $ScriptDir ist vorhanden." -ForegroundColor Green
     }
 }

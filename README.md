@@ -120,13 +120,16 @@ Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
    Blick erkennbar, ob die aktuelle Version installiert ist. Eine bereits
    vorhandene ältere/anders benannte Verknüpfung wird dabei **umbenannt**
    statt gelöscht+neu angelegt, damit sie ihre Position auf dem Desktop
-   behält. Der Desktop wird anschließend automatisch neu gezeichnet
-   (kein manuelles F5 nötig).
+   behält; Windows wird dabei gezielt nur über diese eine Änderung
+   informiert (kein kompletter Desktop-Refresh, der die Icon-Anordnung
+   durcheinanderbringen könnte).
 6. **Änderungsprotokoll öffnen** — bei einer Erstinstallation oder wenn
-   tatsächlich eine andere Version installiert wird, öffnet sich
-   automatisch ein Browser-Tab mit dem [Änderungsprotokoll](#änderungsprotokoll)
-   dieses READMEs auf GitHub, damit sofort sichtbar ist, was sich geändert
-   hat. Bei einem erneuten Lauf ohne Versionswechsel passiert das nicht.
+   tatsächlich eine andere Version installiert wird, öffnet sich ein
+   Browser-Tab mit dem [Änderungsprotokoll](#änderungsprotokoll) dieses
+   READMEs auf GitHub — allerdings erst, **nachdem das Konsolenfenster
+   geschlossen wurde** (ein Hintergrundprozess wartet darauf), nicht
+   während der Nutzer die Setup-Ausgabe noch liest. Bei einem erneuten
+   Lauf ohne Versionswechsel passiert das nicht.
 7. **Aufräumen (optional)** — falls Schritt 0 tatsächlich kopiert hat,
    fragt das Script am Ende: *"ZIP-Datei und ursprünglichen Entpack-Ordner
    in den Papierkorb verschieben? (j/n)"*. Bei "j" wandern die
@@ -251,6 +254,18 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.8.0 (2026-08-06)
+- Papierkorb-Aufräumen (ZIP + Entpack-Ordner) läuft jetzt zuverlässig in
+  einem echten Hilfsscript statt einer fragilen Inline-Befehlszeile, und
+  die ZIP-Suche verwendet keine `-Filter`-Wildcards mehr (gleiche
+  Unzuverlässigkeit wie bei der Verknüpfungssuche)
+- Desktop-Icon-Position bleibt beim Update jetzt wirklich erhalten: statt
+  eines kompletten Desktop-Refresh (`SHCNE_ASSOCCHANGED`, der die
+  Anordnung durcheinanderbringen konnte) wird Windows gezielt nur über
+  die eine umbenannte Verknüpfung informiert (`SHCNE_RENAMEITEM`)
+- Änderungsprotokoll öffnet sich im Browser erst, nachdem das
+  Konsolenfenster geschlossen wurde, nicht mehr während des Setups
 
 ### 1.7.0 (2026-08-06)
 - Setup öffnet bei Erstinstallation oder Versionswechsel automatisch das
