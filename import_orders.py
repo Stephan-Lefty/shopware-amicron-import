@@ -130,7 +130,7 @@ def build_address_node(parent, tag_name, address, new_data, email=None):
         add_text(node, "vatId", address.get("vatId"))
         add_text(node, "email", email or "")
     country = address.get("country") or {}
-    add_text(node, "countryiso", country.get("iso"))
+    add_text(node, "countryiso", country.get("iso3") or country.get("iso"))
     return node
 
 
@@ -159,6 +159,22 @@ def line_item_article_number(line_item):
         return SHIPPING_ARTICLE_NUMBER
     payload = line_item.get("payload") or {}
     return payload.get("productNumber", "")
+
+
+OPTION_GROUPS_EXCLUDED_FROM_ARTICLE_NAME = {"lieferung nach"}
+
+
+def line_item_full_name(line_item):
+    label = line_item.get("label") or ""
+    payload = line_item.get("payload") or {}
+    options = payload.get("options") or []
+    parts = [
+        f"{opt.get('group', '')}: {opt.get('option', '')}"
+        for opt in options
+        if opt.get("group") and opt.get("option")
+        and opt.get("group", "").lower() not in OPTION_GROUPS_EXCLUDED_FROM_ARTICLE_NAME
+    ]
+    return f"{label} ({', '.join(parts)})" if parts else label
 
 
 def latest_payment_method_name(order):
@@ -220,7 +236,7 @@ def build_order_element(order, shop_domain):
         add_text(item, "articleNumber", line_item_article_number(line_item))
         add_text(item, "price", money(price.get("unitPrice")))
         add_text(item, "quantity", line_item.get("quantity", 0))
-        add_text(item, "articleName", line_item.get("label", ""))
+        add_text(item, "articleName", line_item_full_name(line_item))
         add_text(item, "taxRate", line_item_tax_rate(line_item))
 
     payment = ET.SubElement(order_el, "payment")

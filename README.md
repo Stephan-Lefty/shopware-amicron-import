@@ -160,6 +160,19 @@ Shop ggf. überprüfen/ändern:
 - **Bestellnummer-Feld**: enthält `Bestellnummer - Verkaufskanal`
   (z. B. `100551 - Sicherungsstangen.de`), da über einen Shop zwei
   Verkaufskanäle (Sicherungsstangen.de, Mörtelspritzen.de) laufen
+- **Artikelname**: bei Varianten-Produkten (z. B. Sicherungsstangen mit
+  Auswahl von Größe/Farbe) werden die vom Kunden gewählten Optionen aus
+  `payload.options` an den Artikelnamen angehängt, z. B.
+  `ADE Sicherungsstange (Größe: für Laibungsbreite 39-51 cm, Farbe: Weiß - ähnlich RAL 9016 Verkehrsweiß)`
+  — sonst würde in Faktura nur die reine Produktbezeichnung ohne die
+  Kundenauswahl ankommen. Die Optionsgruppe **"Lieferung nach"** wird
+  dabei bewusst ausgeschlossen (steht in `OPTION_GROUPS_EXCLUDED_FROM_ARTICLE_NAME`
+  in `import_orders.py`), da sie nur die Versandländer-Auswahl ist, kein
+  Produktmerkmal
+- **Länderkürzel ("L"-Feld)**: es wird der 3-stellige ISO-Code
+  (`DEU`/`AUT`, mit Rückfallebene auf den 2-stelligen Code) übertragen,
+  nicht der 2-stellige (`DE`/`AT`) — Faktura's `CONVERTLAND`-Tabelle in
+  der Importdefinition erkennt für Österreich nur `AUT`/`AU`, nicht `AT`
 - **Lieferart**: wird immer fest als `Paketdienst` übertragen, unabhängig
   von der in Shopware hinterlegten Versandart
 - **Bestelldatum**: Format `TT.MM.JJJJ` (deutsches Datumsformat)
@@ -200,6 +213,13 @@ Shop ggf. überprüfen/ändern:
   innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
 
 ## Änderungsprotokoll
+
+### 1.1.0 (2026-08-06)
+- Artikelname enthält jetzt die vom Kunden gewählten Varianten-Optionen
+  (z. B. Größe, Farbe), nicht mehr nur die reine Produktbezeichnung
+  (Option "Lieferung nach" bewusst ausgeschlossen)
+- Länderkürzel wird als 3-stelliger ISO-Code (`DEU`/`AUT`) übertragen,
+  damit Faktura's `CONVERTLAND`-Tabelle auch Österreich korrekt erkennt
 
 ### 1.0.0 (2026-08-06)
 - Erste vollständige, produktiv getestete Version
