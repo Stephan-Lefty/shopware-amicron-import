@@ -255,6 +255,14 @@ Shop ggf. überprüfen/ändern:
 
 ## Änderungsprotokoll
 
+### 1.8.1 (2026-08-06)
+- Papierkorb-Aufräumen wartet jetzt (genau wie das Öffnen des
+  Änderungsprotokolls) darauf, dass das Konsolenfenster wirklich
+  geschlossen ist, bevor der Entpack-Ordner gelöscht wird — eine reine
+  2-Sekunden-Verzögerung reichte nicht, da `cmd.exe` diesen Ordner bis
+  zum Tastendruck bei "Drücke eine beliebige Taste" als Arbeitsverzeichnis
+  hält und Windows das Löschen so lange verweigert
+
 ### 1.8.0 (2026-08-06)
 - Papierkorb-Aufräumen (ZIP + Entpack-Ordner) läuft jetzt zuverlässig in
   einem echten Hilfsscript statt einer fragilen Inline-Befehlszeile, und

@@ -32,6 +32,14 @@ $PermanentRoot = "C:\SRFakturaImport\scripts\shopware-amicron-import"
 $ChangelogUrl = "https://github.com/Stephan-Lefty/shopware-amicron-import#%C3%A4nderungsprotokoll"
 $OpenChangelog = $false
 
+# PID des Elternprozesses (cmd.exe aus der .bat-Datei) - dessen Arbeits-
+# verzeichnis ist der Ordner, aus dem dieses Script gestartet wurde. Solange
+# dieses Fenster offen ist (auch beim "Druecke eine beliebige Taste"-Schritt
+# der .bat-Datei), verweigert Windows das Loeschen dieses Ordners. Hinter-
+# grundaufgaben, die diesen Ordner loeschen oder danach etwas oeffnen sollen,
+# muessen deshalb erst warten, bis dieser Prozess beendet ist.
+$ParentProcessId = (Get-CimInstance Win32_Process -Filter "ProcessId = $PID" -ErrorAction SilentlyContinue).ParentProcessId
+
 if ($OriginalDir -ne $PermanentRoot) {
     $ExistingVersionPath = Join-Path $PermanentRoot "VERSION"
     if (Test-Path $ExistingVersionPath) {
@@ -218,10 +226,9 @@ Write-Host "Optional als Nach-Import-Ordner in Faktura: $ErledigtFolder" -Foregr
 if ($OpenChangelog) {
     Write-Host "Aenderungsprotokoll wird im Browser geoeffnet, sobald dieses Fenster geschlossen wird." -ForegroundColor Cyan
     try {
-        $parentId = (Get-CimInstance Win32_Process -Filter "ProcessId = $PID").ParentProcessId
         $changelogHelper = Join-Path $env:TEMP "srfaktura_changelog_$([guid]::NewGuid().ToString('N')).ps1"
         @"
-while (Get-Process -Id $parentId -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }
+while (Get-Process -Id $ParentProcessId -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }
 Start-Process '$ChangelogUrl'
 Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
 "@ | Set-Content -Path $changelogHelper -Encoding UTF8
@@ -244,16 +251,18 @@ if ($OriginalDir -ne $PermanentRoot) {
             Where-Object { $_.Name -like "SRFakturaImport*.zip" } |
             Select-Object -First 1
 
-        # Sowohl die ZIP als auch der eigene, gerade laufende Ordner werden
-        # in einem separaten Hilfsscript geloescht, das erst nach kurzer
-        # Verzoegerung startet (damit dieses Script seine Dateien wieder
-        # freigegeben hat) und sich danach selbst entfernt.
+        # Sowohl die ZIP als auch der eigene, gerade laufende Ordner werden in
+        # einem separaten Hilfsscript geloescht, das erst startet, NACHDEM
+        # das Konsolenfenster (cmd.exe) komplett geschlossen wurde - solange
+        # dessen Arbeitsverzeichnis noch in $OriginalDir liegt, verweigert
+        # Windows das Loeschen dieses Ordners (auch mit Verzoegerung). Das
+        # Hilfsscript entfernt sich danach selbst.
         $cleanupHelper = Join-Path $env:TEMP "srfaktura_cleanup_$([guid]::NewGuid().ToString('N')).ps1"
         $zipLine = if ($ZipCandidate) {
             "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('$($ZipCandidate.FullName)', 'OnlyErrorDialogs', 'SendToRecycleBin')"
         } else { "" }
         @"
-Start-Sleep -Seconds 2
+while (Get-Process -Id $ParentProcessId -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }
 Add-Type -AssemblyName Microsoft.VisualBasic
 $zipLine
 if (Test-Path -LiteralPath '$OriginalDir') {
@@ -265,7 +274,7 @@ Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
         Start-Process -FilePath "powershell.exe" `
             -ArgumentList @("-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", $cleanupHelper) `
             -WindowStyle Hidden
-        Write-Host "ZIP-Datei und Entpack-Ordner werden in Kuerze in den Papierkorb verschoben (im Hintergrund)." -ForegroundColor Green
-        Write-Host "Nur noch das fertig installierte Tool unter $ScriptDir ist vorhanden." -ForegroundColor Green
+        Write-Host "ZIP-Datei und Entpack-Ordner werden in den Papierkorb verschoben, sobald dieses Fenster geschlossen wird." -ForegroundColor Green
+        Write-Host "Nur noch das fertig installierte Tool unter $ScriptDir ist dann vorhanden." -ForegroundColor Green
     }
 }
