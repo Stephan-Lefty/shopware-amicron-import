@@ -1,0 +1,19 @@
+; Kopiere diese Datei zu "config.ini" und trage deine echten Werte ein.
+; config.ini NIEMALS ins Git-Repository committen (enthaelt Zugangsdaten)!
+
+[shopware]
+; Basis-URL deines Shopware-6.7-Shops, ohne abschliessenden Slash
+shop_url = https://www.deinshop.de
+; Access-ID / Client-ID der Integration (Einstellungen > System > Integrationen)
+client_id = HIER_ACCESS_ID_EINTRAGEN
+; Secret-Key / Client-Secret der Integration
+client_secret = HIER_SECRET_KEY_EINTRAGEN
+; Technischer Name des Bestellstatus, der exportiert werden soll ("offen" = open)
+order_state = open
+
+[faktura]
+; Ordner, den Faktura per "Extras > Datenimport > Auftraege (Datei)" ueberwacht
+; Windows-Pfad, z.B. C:\Amicron\Import
+import_folder = C:\Amicron\Import
+; Dateiname-Praefix der erzeugten XML-Datei (Zeitstempel wird automatisch angehaengt)
+file_prefix = shopware_orders

@@ -1,0 +1,5 @@
+# Enthaelt echte Zugangsdaten - niemals committen
+config.ini
+
+# Gepackte Distributions-ZIPs sind Build-Artefakte, keine Quelldateien
+*.zip
