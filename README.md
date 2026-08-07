@@ -207,9 +207,11 @@ Shop ggf. überprüfen/ändern:
   geführt wird — die `CONVERTLAND`-Tabelle in der alten
   Shopware-V4.1-Importdefinition (mit Kurzcodes wie `A`/`D`) ist dafür
   nicht (mehr) maßgeblich.
-- **Lieferart**: wird immer fest als `Paketdienst` übertragen, unabhängig
-  von der in Shopware hinterlegten Versandart
-- **Bestelldatum**: Format `TT.MM.JJJJ` (deutsches Datumsformat)
+- **Lieferart (Auftrag)**: wird immer fest als `Paketdienst` übertragen,
+  unabhängig von der in Shopware hinterlegten Versandart
+- **Bestelldatum**: Format `TT.MM.JJJJ HH:MM:SS` (deutsches Datumsformat,
+  ohne Millisekunden/Zeitzonen-Suffix — das rohe ISO-Format konnte
+  Faktura nicht konvertieren)
 - **Versandkosten-Artikel**: Line-Items mit "Versandkosten" im Namen
   bekommen automatisch die feste Faktura-Artikelnummer `1000154`
   zugewiesen, unabhängig von der Shopware-Artikelnummer
@@ -217,6 +219,26 @@ Shop ggf. überprüfen/ändern:
   übertragen (nicht als eigenständiges Tag) — das war nötig, damit
   Faktura die Adresse korrekt dem neu angelegten Kundendatensatz
   zuordnet (siehe Troubleshooting)
+- **Artikel-Text**: zusätzlich zum Artikelnamen wird derselbe Text auch
+  ins `text`-Feld der Position geschrieben (`ATRPOS.TEXT`) — dieses Feld
+  existierte vorher noch gar nicht in der Importdefinition
+- **Kundengruppe**: `groupKey` (→ `KUNADRESSE.GRUPPE`) enthält den
+  Verkaufskanal-Namen (Sicherungsstangen.de / Mörtelspritzen.de), nicht
+  die generische Shopware-Kundengruppe
+- **Zahlweise/Lieferart beim Kunden (Reiter "Faktura")**: neue Felder
+  `kundeZahlweise` (immer `Vorkasse`) und `kundeLieferart` (immer
+  `Paketdienst`) im `billing`-Block — unabhängig von der tatsächlichen
+  Zahlart/Versandart der Bestellung, das sind feste Vorgaben für die
+  Kundenverwaltung
+
+**Wichtig bei jeder neu hinzukommenden Feldzuordnung** (`text`,
+`kundeZahlweise`, `kundeLieferart` und ggf. die weiterhin ungeklärte
+`email`/`countryiso`-Zuordnung, siehe Troubleshooting): Das Script kann
+beliebige XML-Tags erzeugen, aber ob Faktura sie tatsächlich verarbeitet,
+hängt allein von der **live in Faktura hinterlegten Importdefinition 3**
+ab (*Einstellungen → Importdefinitionen*), nicht von `Faktura_Importdefinition.xml`
+in diesem Repo (die ist nur eine Referenz/Ausgangsbasis). Neue Felder
+müssen dort manuell nachgetragen werden.
 
 ## Troubleshooting / bekannte Stolperfallen
 
@@ -247,14 +269,31 @@ Shop ggf. überprüfen/ändern:
   "verstecken". Betrifft diese Installation nicht mehr, da das Script
   jetzt lokal auf dem Faktura-PC läuft, ist aber relevant, falls das
   Tool auf einem Server-Setup wiederverwendet wird.
-- **E-Mail-Adresse zeigt Shop-Domain statt Kunden-E-Mail** → trat auf,
-  solange `<email>` als eigenständiges Tag außerhalb des
-  `<billing NewData="KUNADRESSE">`-Blocks stand. Fix: `<email>` wurde in
-  den `billing`-Block verschoben (bestätigt durch Vergleich mit der für
-  HaBeFa.de funktionierenden Importdefinition, die `EMAIL` ebenfalls
-  innerhalb der `CUSTOMERS_ADDRESS`/`KUNADRESSE`-Gruppe verschachtelt).
+- **E-Mail-Adresse zeigt Shop-Domain statt Kunden-E-Mail, Länderkürzel
+  bleibt leer (ungelöst, Stand 2026-08-07)** → `<email>` wurde vom
+  eigenständigen Order-Tag in den `billing`-Block verschoben (analog zu
+  einer für HaBeFa.de funktionierenden Importdefinition), das Problem
+  bestand danach aber weiter. Auffällig: alle anderen Felder im selben
+  `billing`-Block (Name, Straße, PLZ, Ort) kommen korrekt an, nur `email`
+  und `countryiso` nicht — das deutet darauf hin, dass die **live in
+  Faktura hinterlegte Importdefinition 3** nicht (mehr) exakt der Datei
+  `Faktura_Importdefinition.xml` in diesem Repo entspricht. Muss über
+  einen direkten Blick in den Faktura-Importdefinitionen-Editor geklärt
+  werden, nicht über weitere Änderungen am Script.
 
 ## Änderungsprotokoll
+
+### 1.10.0 (2026-08-07)
+- Neues `text`-Feld bei Artikelpositionen (`ATRPOS.TEXT`) hinzugefügt —
+  bisher gar nicht in der Importdefinition zugeordnet
+- `groupKey` (Kundengruppe) enthält jetzt den Verkaufskanal-Namen statt
+  der generischen Shopware-Kundengruppe
+- Neue Felder `kundeZahlweise` (`Vorkasse`) und `kundeLieferart`
+  (`Paketdienst`) für die Kundenverwaltung (Reiter "Faktura") ergänzt —
+  feste Vorgaben, unabhängig von der tatsächlichen Bestellung
+- `Faktura_Importdefinition.xml` entsprechend aktualisiert (als
+  Referenz/Vorschlag — die neuen Felder müssen in der live in Faktura
+  hinterlegten Importdefinition 3 noch manuell zugeordnet werden)
 
 ### 1.9.2 (2026-08-07)
 - Fehler beim Import behoben: `orderTime` (mappt auf `#DATUM`) wurde noch

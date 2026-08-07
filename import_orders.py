@@ -55,7 +55,7 @@ ORDER_ASSOCIATIONS = {
             "shippingMethod": {},
         }
     },
-    "orderCustomer": {"associations": {"customer": {"associations": {"group": {}}}}},
+    "orderCustomer": {},
     "currency": {},
     "transactions": {"associations": {"paymentMethod": {}}},
     "stateMachineState": {},
@@ -113,6 +113,12 @@ def salutation_text(salutation):
     return ""
 
 
+# Feste Vorgaben fuer die Kundenverwaltung in Faktura (Reiter "Faktura"),
+# unabhaengig von der tatsaechlichen Zahlart/Versandart der Bestellung.
+KUNDE_ZAHLWEISE = "Vorkasse"
+KUNDE_LIEFERART = "Paketdienst"
+
+
 def build_address_node(parent, tag_name, address, new_data, email=None):
     address = address or {}
     node = ET.SubElement(parent, tag_name, {"NewData": new_data})
@@ -129,6 +135,8 @@ def build_address_node(parent, tag_name, address, new_data, email=None):
         add_text(node, "fax", "")
         add_text(node, "vatId", address.get("vatId"))
         add_text(node, "email", email or "")
+        add_text(node, "kundeZahlweise", KUNDE_ZAHLWEISE)
+        add_text(node, "kundeLieferart", KUNDE_LIEFERART)
     country = address.get("country") or {}
     add_text(node, "countryiso", country.get("iso"))
     return node
@@ -236,19 +244,19 @@ def build_order_element(order, shop_domain):
             continue
         item = ET.SubElement(details, "item", {"NewData": "ATRPOS"})
         price = line_item.get("price") or {}
+        full_name = line_item_full_name(line_item)
         add_text(item, "articleNumber", line_item_article_number(line_item))
         add_text(item, "price", money(price.get("unitPrice")))
         add_text(item, "quantity", line_item.get("quantity", 0))
-        add_text(item, "articleName", line_item_full_name(line_item))
+        add_text(item, "articleName", full_name)
+        add_text(item, "text", full_name)
         add_text(item, "taxRate", line_item_tax_rate(line_item))
 
     payment = ET.SubElement(order_el, "payment")
     add_text(payment, "description", latest_payment_method_name(order))
 
     order_customer = order.get("orderCustomer") or {}
-    customer = order_customer.get("customer") or {}
-    group = customer.get("group") or {}
-    add_text(order_el, "groupKey", group.get("name", ""))
+    add_text(order_el, "groupKey", channel_name)
     add_text(order_el, "priceGroupId", "")
 
     debit = ET.SubElement(order_el, "debit")

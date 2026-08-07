@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- Import Definition für Shopware V4.1, Dez 2013, Version 0.95, AD -->
+<!-- Import Definition fï¿½r Shopware V4.1, Dez 2013, Version 0.95, AD -->
 
 <ORDERS>
     <DEFINES>
         <!-- Dokumentation dieser Einstellungen: siehe Kapitel "Datenimport > Auftragsimport > Definitionsdatei: Aufbau und Inhalt"-->
         <DECIMALSEPARATOR>.</DECIMALSEPARATOR>
-        <!-- Konvertierung der Landeskürzel ist für Amicron-Faktura notwendig für die korrekte Ermittlung der Steuerkürzel bei  Auslandsrechnungen. -->
-        <!-- Importierte Landeskürzel für Inland und EU-Länder müssen übereinstimmen mit denen, die in der Faktura in -->
+        <!-- Konvertierung der Landeskï¿½rzel ist fï¿½r Amicron-Faktura notwendig fï¿½r die korrekte Ermittlung der Steuerkï¿½rzel bei  Auslandsrechnungen. -->
+        <!-- Importierte Landeskï¿½rzel fï¿½r Inland und EU-Lï¿½nder mï¿½ssen ï¿½bereinstimmen mit denen, die in der Faktura in -->
         <!-- den Programmoptionen unter "System > Einstellungen 2/2" eingetragen wurden -->
         <INLAND>D,DE,DEU,DEUTSCHLAND,GER,GERMANY</INLAND>
         <CONVERTLAND>AUT=A,AUS=A,Austria=A,AU=A,GERMANY=D,DE=D,GER=D,Netherlands=NL,France=FR,Slovenia=SL,Switzerland=CH,Spain=E,Greece=GR</CONVERTLAND>
@@ -15,8 +15,8 @@
         <!-- die Shop-Bestellnummer ins FREIFELD1 (Vermerk),
              das Bestelldatum ins FREIFELD2 (Bestellung vom) und
              der Shop-Domainname des Auftrags ins FREIFELD3 (Bestellart)
-             werden übernommen
-             Bei Bedarf können die geändert werden: -->
+             werden ï¿½bernommen
+             Bei Bedarf kï¿½nnen die geï¿½ndert werden: -->
         <id NewData="AUFTRAG">#AUFTRAGNR</id>
         <number>#FREIFELD1</number>
         <customerId>#KUNADRESSE.NR</customerId>
@@ -37,6 +37,7 @@
                  <price>#ATRPOS.EPREIS</price>
                  <quantity>#ATRPOS.MENGE</quantity>
                  <articleName>#ATRPOS.BEZEICHNUNG</articleName>
+                 <text>#ATRPOS.TEXT</text>
                  <taxRate>#ATRPOS.STEUER</taxRate>
             </item>
         </details>
@@ -64,6 +65,12 @@
              <phone>#TELEFON1</phone>
              <fax>#FAX</fax>
              <vatId>#USTIDNR</vatId>
+             <!-- Neu: noch keinem Faktura-Feld zugeordnet, bitte im
+                  Importdefinitionen-Editor manuell auf die Kundenfelder
+                  "Zahlweise" und "Lieferart" (Reiter "Faktura" beim Kunden)
+                  mappen -->
+             <kundeZahlweise>#KUNADRESSE.ZAHLWEISE</kundeZahlweise>
+             <kundeLieferart>#KUNADRESSE.LIEFERART</kundeLieferart>
              <countryiso>#LAND</countryiso>
         </billing>
         <shipping NewData="LFRADRESSE">
