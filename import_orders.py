@@ -258,6 +258,7 @@ def build_order_element(order, shop_domain):
     order_customer = order.get("orderCustomer") or {}
     add_text(order_el, "groupKey", channel_name)
     add_text(order_el, "priceGroupId", "")
+    add_text(order_el, "email", order_customer.get("email", ""))
 
     debit = ET.SubElement(order_el, "debit")
     add_text(debit, "account", "")

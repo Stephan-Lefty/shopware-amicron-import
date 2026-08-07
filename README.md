@@ -269,19 +269,29 @@ müssen dort manuell nachgetragen werden.
   "verstecken". Betrifft diese Installation nicht mehr, da das Script
   jetzt lokal auf dem Faktura-PC läuft, ist aber relevant, falls das
   Tool auf einem Server-Setup wiederverwendet wird.
-- **E-Mail-Adresse zeigt Shop-Domain statt Kunden-E-Mail, Länderkürzel
-  bleibt leer (ungelöst, Stand 2026-08-07)** → `<email>` wurde vom
-  eigenständigen Order-Tag in den `billing`-Block verschoben (analog zu
-  einer für HaBeFa.de funktionierenden Importdefinition), das Problem
-  bestand danach aber weiter. Auffällig: alle anderen Felder im selben
-  `billing`-Block (Name, Straße, PLZ, Ort) kommen korrekt an, nur `email`
-  und `countryiso` nicht — das deutet darauf hin, dass die **live in
-  Faktura hinterlegte Importdefinition 3** nicht (mehr) exakt der Datei
-  `Faktura_Importdefinition.xml` in diesem Repo entspricht. Muss über
-  einen direkten Blick in den Faktura-Importdefinitionen-Editor geklärt
-  werden, nicht über weitere Änderungen am Script.
+- **"Kunden E-Mail" auf dem Beleg-Kopfdaten-Bildschirm zeigt Shop-Domain
+  statt Kunden-E-Mail (Stand 2026-08-07, teilweise geklärt)** → ein
+  frischer Export der live in Faktura hinterlegten Importdefinition 3
+  zeigte, dass `<email>#KUNADRESSE.EMAIL</email>` **auf oberster
+  Auftragsebene** steht (nicht im `billing`-Block) — das Tag wurde beim
+  E-Mail-Fix versehentlich komplett dorthin verschoben und fehlte danach
+  auf oberster Ebene ganz. Wieder ergänzt (zusätzlich zum `billing`-Block).
+  Da "Kunden E-Mail" aber schon *vorher* (mit dem Tag an der jetzt
+  bestätigten korrekten Position) den `shopURL`-Wert zeigte, ist unklar,
+  ob dieses Beleg-Feld überhaupt an `KUNADRESSE.EMAIL` gebunden ist, oder
+  ob es sich um ein anders zweckbestimmtes Feld handelt (z. B.
+  Shop-Herkunft). Zu prüfen: zeigt die **Kundenverwaltung** (nicht der
+  Beleg) beim importierten Kunden die korrekte E-Mail? Das Länderkürzel
+  im `billing`-Block ist von diesem Fund unabhängig weiterhin ungeklärt.
 
 ## Änderungsprotokoll
+
+### 1.10.1 (2026-08-07)
+- `<email>` wieder zusätzlich auf oberster Auftragsebene ergänzt
+  (`#KUNADRESSE.EMAIL`, direkt nach `priceGroupId`) — ein frischer Export
+  der live in Faktura hinterlegten Importdefinition 3 bestätigte, dass
+  das Tag dort erwartet wird; es war beim vorherigen E-Mail-Fix
+  versehentlich nur noch in den `billing`-Block verschoben worden
 
 ### 1.10.0 (2026-08-07)
 - Neues `text`-Feld bei Artikelpositionen (`ATRPOS.TEXT`) hinzugefügt —
