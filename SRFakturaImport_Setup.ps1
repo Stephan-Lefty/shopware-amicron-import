@@ -156,7 +156,7 @@ if (-not (Test-Path $ConfigPath)) {
 # Icon per Hand an die gewuenschte Stelle ziehen.
 $VersionPath = Join-Path $ScriptDir "VERSION"
 $Version = if (Test-Path $VersionPath) { (Get-Content $VersionPath -Raw).Trim() } else { "" }
-$LinkName = if ($Version) { "Shopware Bestellimport (v$Version).lnk" } else { "Shopware Bestellimport.lnk" }
+$LinkName = if ($Version) { "Shopware Import (v$Version).lnk" } else { "Shopware Import.lnk" }
 
 $DesktopPath = [Environment]::GetFolderPath("Desktop")
 $IconPath = Join-Path $ScriptDir "import_orders.ico"
@@ -165,9 +165,11 @@ $LinkPath = Join-Path $DesktopPath $LinkName
 
 # Bewusst ohne -Filter (der Parameter kann bei Klammern/Leerzeichen im
 # Dateinamen unzuverlaessig sein) - stattdessen alle Dateien auflisten und
-# per -like abgleichen.
+# per -like abgleichen. Erfasst sowohl den alten Namen ("Shopware
+# Bestellimport ...") als auch den aktuellen ("Shopware Import ..."), damit
+# beim Umstieg auf den kuerzeren Namen keine alte Verknuepfung liegen bleibt.
 Get-ChildItem -Path $DesktopPath -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -like "Shopware Bestellimport*.lnk" -and $_.FullName -ne $LinkPath } |
+    Where-Object { $_.Name -like "Shopware*Import*.lnk" -and $_.FullName -ne $LinkPath } |
     Remove-Item -Force -ErrorAction SilentlyContinue
 
 $WshShell = New-Object -ComObject WScript.Shell

@@ -113,7 +113,7 @@ Doppelklick auf **`SRFakturaImport_Setup.bat`** startet
    sie aus `config.ini.example` erzeugt, wobei der `import_folder`-Pfad
    automatisch korrekt (absolut) eingetragen wird. `shop_url`,
    `client_id`, `client_secret` müssen danach von Hand ergänzt werden.
-5. **Desktop-Verknüpfung anlegen/aktualisieren** — `Shopware Bestellimport (vX.Y.Z).lnk`
+5. **Desktop-Verknüpfung anlegen/aktualisieren** — `Shopware Import (vX.Y.Z).lnk`
    mit `import_orders.ico` als Icon, Ziel ist `import_orders.py` am
    festen Zielort. Die Versionsnummer kommt aus der `VERSION`-Datei und
    steht damit direkt als Text unter dem Desktop-Icon — so ist auf einen
@@ -286,6 +286,13 @@ müssen dort manuell nachgetragen werden.
 
 ## Änderungsprotokoll
 
+### 1.10.2 (2026-08-07)
+- Desktop-Verknüpfung heißt jetzt kürzer `Shopware Import (vX.Y.Z)`
+  statt `Shopware Bestellimport (vX.Y.Z)` — der bisherige Text war zu
+  lang für die Anzeige unter dem Icon. Die Erkennung alter Verknüpfungen
+  erfasst beim Umstieg sowohl den alten als auch den neuen Namen, damit
+  keine doppelten Icons liegen bleiben.
+
 ### 1.10.1 (2026-08-07)
 - `<email>` wieder zusätzlich auf oberster Auftragsebene ergänzt
   (`#KUNADRESSE.EMAIL`, direkt nach `priceGroupId`) — ein frischer Export
@@ -388,7 +395,7 @@ müssen dort manuell nachgetragen werden.
 ### 1.3.0 (2026-08-06)
 - Zentrale `VERSION`-Datei als Versionsquelle eingeführt
 - Desktop-Verknüpfung enthält jetzt die Versionsnummer im Dateinamen
-  (`Shopware Bestellimport (vX.Y.Z).lnk`), damit sie direkt unter dem
+  (`Shopware Import (vX.Y.Z).lnk`), damit sie direkt unter dem
   Icon sichtbar ist
 - Setup-Script entfernt beim erneuten Ausführen automatisch ältere/
   anders benannte Verknüpfungen, um Duplikate zu vermeiden
