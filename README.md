@@ -256,6 +256,13 @@ Shop ggf. überprüfen/ändern:
 
 ## Änderungsprotokoll
 
+### 1.9.2 (2026-08-07)
+- Fehler beim Import behoben: `orderTime` (mappt auf `#DATUM`) wurde noch
+  im rohen ISO-Format mit Millisekunden und Zeitzone gesendet
+  (`2026-08-06T18:00:31.407+00:00`), das Faktura nicht konvertieren
+  konnte ("Datumkonvertierung ... nicht möglich"). Wird jetzt wie
+  `orderDatum` als deutsches Format (`TT.MM.JJJJ HH:MM:SS`) übertragen.
+
 ### 1.9.1 (2026-08-06)
 - Desktop-Refresh nach dem Setup wieder auf den ursprünglichen, bewährten
   Befehl (`SHCNE_ASSOCCHANGED`) umgestellt — die gezieltere Variante

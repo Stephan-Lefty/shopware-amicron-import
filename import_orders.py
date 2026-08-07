@@ -210,13 +210,16 @@ def build_order_element(order, shop_domain):
     add_text(order_el, "invoiceShippingTax", shipping_tax_rate(order))
 
     order_datetime = order.get("orderDateTime", "")
+    order_time_formatted = order_datetime
     order_date_only = ""
     if order_datetime:
         try:
-            order_date_only = datetime.fromisoformat(order_datetime).strftime("%d.%m.%Y")
+            dt = datetime.fromisoformat(order_datetime)
+            order_time_formatted = dt.strftime("%d.%m.%Y %H:%M:%S")
+            order_date_only = dt.strftime("%d.%m.%Y")
         except ValueError:
             order_date_only = order_datetime.split("T")[0]
-    add_text(order_el, "orderTime", order_datetime)
+    add_text(order_el, "orderTime", order_time_formatted)
     add_text(order_el, "orderDatum", order_date_only)
     add_text(order_el, "shopURL", shop_domain)
     add_text(order_el, "comment", order.get("customerComment"))
