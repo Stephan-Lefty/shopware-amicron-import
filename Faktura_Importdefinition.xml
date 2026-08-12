@@ -65,12 +65,6 @@
              <phone>#TELEFON1</phone>
              <fax>#FAX</fax>
              <vatId>#USTIDNR</vatId>
-             <!-- Neu: noch keinem Faktura-Feld zugeordnet, bitte im
-                  Importdefinitionen-Editor manuell auf die Kundenfelder
-                  "Zahlweise" und "Lieferart" (Reiter "Faktura" beim Kunden)
-                  mappen -->
-             <kundeZahlweise>#KUNADRESSE.ZAHLWEISE</kundeZahlweise>
-             <kundeLieferart>#KUNADRESSE.LIEFERART</kundeLieferart>
              <countryiso>#LAND</countryiso>
         </billing>
         <shipping NewData="LFRADRESSE">

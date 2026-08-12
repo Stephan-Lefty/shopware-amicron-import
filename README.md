@@ -207,38 +207,47 @@ Shop ggf. überprüfen/ändern:
   geführt wird — die `CONVERTLAND`-Tabelle in der alten
   Shopware-V4.1-Importdefinition (mit Kurzcodes wie `A`/`D`) ist dafür
   nicht (mehr) maßgeblich.
-- **Lieferart (Auftrag)**: wird immer fest als `Paketdienst` übertragen,
-  unabhängig von der in Shopware hinterlegten Versandart
+- **Lieferart (Auftrag)**: wird immer fest als `Paketdienst` übertragen
+  (`dispatch/name` → `#AUFTRAG.LIEFERART`), unabhängig von der in
+  Shopware hinterlegten Versandart — laut Amicron-Doku muss der Wert
+  exakt einem in Faktura unter *Programmoptionen → "Lieferart / Zahlweise"*
+  definierten Eintrag entsprechen, `Paketdienst` ist dort bestätigt
+  vorhanden
+- **Zahlweise (Auftrag)**: wird immer fest als `Vorkasse` übertragen
+  (`payment/description` → `#AUFTRAG.ZAHLWEISE`), unabhängig von der
+  tatsächlichen Zahlart der Bestellung (z. B. PayPal) — ebenfalls
+  bestätigt als gültiger Eintrag in den Programmoptionen
+- **Anrede**: Shopwares `salutationKey` wird auf `Herr`/`Frau` abgebildet;
+  bei fehlender Angabe (`not_specified`, Shopware zeigt dann "Keine
+  Angabe" an) bleibt das Feld bewusst leer, statt einen für Faktura
+  ungültigen Wert zu senden
 - **Bestelldatum**: Format `TT.MM.JJJJ HH:MM:SS` (deutsches Datumsformat,
   ohne Millisekunden/Zeitzonen-Suffix — das rohe ISO-Format konnte
   Faktura nicht konvertieren)
 - **Versandkosten-Artikel**: Line-Items mit "Versandkosten" im Namen
   bekommen automatisch die feste Faktura-Artikelnummer `1000154`
   zugewiesen, unabhängig von der Shopware-Artikelnummer
-- **E-Mail-Adresse**: wird innerhalb des `billing`/`KUNADRESSE`-Blocks
-  übertragen (nicht als eigenständiges Tag) — das war nötig, damit
-  Faktura die Adresse korrekt dem neu angelegten Kundendatensatz
-  zuordnet (siehe Troubleshooting)
+- **E-Mail-Adresse**: wird sowohl auf oberster Auftragsebene
+  (`#KUNADRESSE.EMAIL`, wie in der Importdefinition vorgesehen) als auch
+  zusätzlich im `billing`/`KUNADRESSE`-Block übertragen (siehe
+  Troubleshooting zur Vorgeschichte dieses Felds)
 - **Artikel-Text**: zusätzlich zum Artikelnamen wird derselbe Text auch
   ins `text`-Feld der Position geschrieben (`ATRPOS.TEXT`) — dieses Feld
   existierte vorher noch gar nicht in der Importdefinition
 - **Kundengruppe**: `groupKey` (→ `KUNADRESSE.GRUPPE`) enthält den
   Verkaufskanal-Namen (Sicherungsstangen.de / Mörtelspritzen.de), nicht
   die generische Shopware-Kundengruppe
-- **Zahlweise/Lieferart beim Kunden (Reiter "Faktura")**: neue Felder
-  `kundeZahlweise` (immer `Vorkasse`) und `kundeLieferart` (immer
-  `Paketdienst`) im `billing`-Block — unabhängig von der tatsächlichen
-  Zahlart/Versandart der Bestellung, das sind feste Vorgaben für die
-  Kundenverwaltung
 
-**Wichtig bei jeder neu hinzukommenden Feldzuordnung** (`text`,
-`kundeZahlweise`, `kundeLieferart` und ggf. die weiterhin ungeklärte
-`email`/`countryiso`-Zuordnung, siehe Troubleshooting): Das Script kann
-beliebige XML-Tags erzeugen, aber ob Faktura sie tatsächlich verarbeitet,
-hängt allein von der **live in Faktura hinterlegten Importdefinition 3**
-ab (*Einstellungen → Importdefinitionen*), nicht von `Faktura_Importdefinition.xml`
-in diesem Repo (die ist nur eine Referenz/Ausgangsbasis). Neue Felder
-müssen dort manuell nachgetragen werden.
+**Wichtig bei jeder neu hinzukommenden Feldzuordnung** (z. B. `text`):
+Das Script kann beliebige XML-Tags erzeugen, aber ob Faktura sie
+tatsächlich verarbeitet, hängt allein von der **live in Faktura
+hinterlegten Importdefinition 3** ab (*Einstellungen → Importdefinitionen*),
+nicht von `Faktura_Importdefinition.xml` in diesem Repo (die ist nur
+eine Referenz/Ausgangsbasis). Neue Felder müssen dort manuell
+nachgetragen werden. Bei `Lieferart`/`Zahlweise` außerdem beachten: laut
+[Amicron-Doku zu den Auftrags-Feldbeschreibungen](https://www.amicron.org/onlinehilfe/amicron-faktura-13/auftrage_feldbeschreibungen.htm)
+sind nur Werte gültig, die vorher in den Programmoptionen unter
+"Lieferart / Zahlweise" definiert wurden — kein Freitext.
 
 ## Troubleshooting / bekannte Stolperfallen
 
@@ -285,6 +294,19 @@ müssen dort manuell nachgetragen werden.
   im `billing`-Block ist von diesem Fund unabhängig weiterhin ungeklärt.
 
 ## Änderungsprotokoll
+
+### 1.11.0 (2026-08-12)
+- Recherche in der offiziellen Amicron-Doku ergab: `Lieferart` und
+  `Zahlweise` sind Auftragsfelder (`#AUFTRAG.LIEFERART`/`#AUFTRAG.ZAHLWEISE`),
+  keine eigenen Kundenfelder — die in 1.10.0 erfundenen `kundeZahlweise`/
+  `kundeLieferart`-Felder wieder entfernt
+- `Zahlweise` (`payment/description`) wird jetzt ebenfalls fest als
+  `Vorkasse` übertragen (vorher die tatsächliche Zahlart, z. B. PayPal) —
+  von Stephan als korrekt bestätigt, ebenso wie `Paketdienst` für
+  `Lieferart`
+- `Anrede` wird jetzt auf `Herr`/`Frau` abgebildet statt Shopwares rohem
+  `displayName` — bleibt bei fehlender Angabe bewusst leer statt eines
+  für Faktura vermutlich ungültigen Werts wie "Keine Angabe"
 
 ### 1.10.2 (2026-08-07)
 - Desktop-Verknüpfung heißt jetzt kürzer `Shopware Import (vX.Y.Z)`

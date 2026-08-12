@@ -57,7 +57,6 @@ ORDER_ASSOCIATIONS = {
     },
     "orderCustomer": {},
     "currency": {},
-    "transactions": {"associations": {"paymentMethod": {}}},
     "stateMachineState": {},
     "salesChannel": {},
 }
@@ -107,16 +106,20 @@ def add_text(parent, name, value="", attrib=None):
     return el
 
 
+# Amicron-Faktura erwartet fuer #ANREDE offenbar feste, bekannte Werte -
+# Shopwares "Keine Angabe" (salutationKey "not_specified") passt zu keiner
+# Faktura-Option und wird deshalb auf leer abgebildet statt durchgereicht.
+SALUTATION_MAP = {
+    "mr": "Herr",
+    "mrs": "Frau",
+}
+
+
 def salutation_text(salutation):
     if isinstance(salutation, dict):
-        return salutation.get("displayName") or ""
+        key = salutation.get("salutationKey", "")
+        return SALUTATION_MAP.get(key, "")
     return ""
-
-
-# Feste Vorgaben fuer die Kundenverwaltung in Faktura (Reiter "Faktura"),
-# unabhaengig von der tatsaechlichen Zahlart/Versandart der Bestellung.
-KUNDE_ZAHLWEISE = "Vorkasse"
-KUNDE_LIEFERART = "Paketdienst"
 
 
 def build_address_node(parent, tag_name, address, new_data, email=None):
@@ -135,8 +138,6 @@ def build_address_node(parent, tag_name, address, new_data, email=None):
         add_text(node, "fax", "")
         add_text(node, "vatId", address.get("vatId"))
         add_text(node, "email", email or "")
-        add_text(node, "kundeZahlweise", KUNDE_ZAHLWEISE)
-        add_text(node, "kundeLieferart", KUNDE_LIEFERART)
     country = address.get("country") or {}
     add_text(node, "countryiso", country.get("iso"))
     return node
@@ -183,15 +184,6 @@ def line_item_full_name(line_item):
         and opt.get("group", "").lower() not in OPTION_GROUPS_EXCLUDED_FROM_ARTICLE_NAME
     ]
     return f"{label} ({', '.join(parts)})" if parts else label
-
-
-def latest_payment_method_name(order):
-    transactions = order.get("transactions") or []
-    if not transactions:
-        return ""
-    last = sorted(transactions, key=lambda t: t.get("createdAt") or "")[-1]
-    method = last.get("paymentMethod") or {}
-    return method.get("name", "")
 
 
 def sales_channel_name(order):
@@ -252,8 +244,10 @@ def build_order_element(order, shop_domain):
         add_text(item, "text", full_name)
         add_text(item, "taxRate", line_item_tax_rate(line_item))
 
+    # Zahlweise wird unabhaengig von der tatsaechlichen Zahlart der
+    # Bestellung immer fest als "Vorkasse" uebertragen.
     payment = ET.SubElement(order_el, "payment")
-    add_text(payment, "description", latest_payment_method_name(order))
+    add_text(payment, "description", "Vorkasse")
 
     order_customer = order.get("orderCustomer") or {}
     add_text(order_el, "groupKey", channel_name)
