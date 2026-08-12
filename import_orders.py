@@ -159,14 +159,20 @@ def shipping_tax_rate(order):
 
 
 SHIPPING_ARTICLE_NUMBER = "1000154"
+# Sammel-Artikelnummer fuer alle regulaeren Produkte: einmalig in Faktura
+# angelegt, absichtlich ohne eigene Artikelbeschreibung, damit Faktura nie
+# eine vorhandene Stammdaten-Beschreibung ueber die importierte Bezeichnung/
+# den Text legt. Die tatsaechliche Shopware-Artikelnummer wird dadurch nicht
+# mehr uebertragen - Produktidentifikation erfolgt nur noch ueber Bezeichnung
+# und Text.
+PRODUCT_ARTICLE_NUMBER = "20000233"
 
 
 def line_item_article_number(line_item):
     label = line_item.get("label") or ""
     if "versandkosten" in label.lower():
         return SHIPPING_ARTICLE_NUMBER
-    payload = line_item.get("payload") or {}
-    return payload.get("productNumber", "")
+    return PRODUCT_ARTICLE_NUMBER
 
 
 OPTION_GROUPS_EXCLUDED_FROM_ARTICLE_NAME = {"lieferung nach"}

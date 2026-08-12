@@ -224,9 +224,17 @@ Shop ggf. überprüfen/ändern:
 - **Bestelldatum**: Format `TT.MM.JJJJ HH:MM:SS` (deutsches Datumsformat,
   ohne Millisekunden/Zeitzonen-Suffix — das rohe ISO-Format konnte
   Faktura nicht konvertieren)
-- **Versandkosten-Artikel**: Line-Items mit "Versandkosten" im Namen
-  bekommen automatisch die feste Faktura-Artikelnummer `1000154`
-  zugewiesen, unabhängig von der Shopware-Artikelnummer
+- **Feste Artikelnummern statt Shopware-Artikelnummern**: Line-Items mit
+  "Versandkosten" im Namen bekommen die feste Faktura-Artikelnummer
+  `1000154`, alle regulären Produkte die feste Sammel-Artikelnummer
+  `20000233` — beide einmalig in Faktura angelegt, absichtlich **ohne**
+  eigene Artikelbeschreibung. Grund: Wird die tatsächliche
+  Shopware-Artikelnummer verwendet und existiert sie bereits in Faktura,
+  überschreibt Faktura die importierte Bezeichnung/den Text mit der dort
+  hinterlegten Artikelbeschreibung. Mit der leeren Sammelnummer bleiben
+  die aus Shopware importierten Werte immer erhalten, und es muss keine
+  einzelne Artikelnummer in Faktura gepflegt werden — die
+  Produktidentifikation läuft komplett über Bezeichnung/Text
 - **E-Mail-Adresse**: wird auf oberster Auftragsebene übertragen
   (`#KUNADRESSE.EMAIL`, genau wie in der Importdefinition vorgesehen),
   nicht im `billing`/`KUNADRESSE`-Block (siehe Troubleshooting zur
@@ -294,6 +302,15 @@ sind nur Werte gültig, die vorher in den Programmoptionen unter
   im `billing`-Block ist von diesem Fund unabhängig weiterhin ungeklärt.
 
 ## Änderungsprotokoll
+
+### 1.12.0 (2026-08-12)
+- Reguläre Artikel-Positionen verwenden jetzt eine feste Sammel-Artikelnummer
+  (`20000233`, einmalig in Faktura ohne eigene Beschreibung angelegt)
+  statt der tatsächlichen Shopware-Artikelnummer — sonst überschrieb
+  Faktura bei bereits vorhandenen Artikelnummern die importierte
+  Bezeichnung/den Text mit der dort hinterlegten Artikelbeschreibung.
+  So bleiben die aus Shopware exportierten Werte garantiert erhalten,
+  ohne dass einzelne Artikel in Faktura gepflegt werden müssen.
 
 ### 1.11.1 (2026-08-12)
 - Doppeltes `email`-Tag im `billing`-Block wieder entfernt (E-Mail kommt
