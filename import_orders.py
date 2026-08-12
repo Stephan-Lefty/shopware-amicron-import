@@ -122,7 +122,7 @@ def salutation_text(salutation):
     return ""
 
 
-def build_address_node(parent, tag_name, address, new_data, email=None):
+def build_address_node(parent, tag_name, address, new_data):
     address = address or {}
     node = ET.SubElement(parent, tag_name, {"NewData": new_data})
     add_text(node, "company", address.get("company"))
@@ -137,7 +137,6 @@ def build_address_node(parent, tag_name, address, new_data, email=None):
         add_text(node, "phone", address.get("phoneNumber"))
         add_text(node, "fax", "")
         add_text(node, "vatId", address.get("vatId"))
-        add_text(node, "email", email or "")
     country = address.get("country") or {}
     add_text(node, "countryiso", country.get("iso"))
     return node
@@ -260,10 +259,7 @@ def build_order_element(order, shop_domain):
     add_text(debit, "bankName", "")
     add_text(debit, "accountHolder", "")
 
-    build_address_node(
-        order_el, "billing", order.get("billingAddress"), "KUNADRESSE",
-        email=order_customer.get("email", ""),
-    )
+    build_address_node(order_el, "billing", order.get("billingAddress"), "KUNADRESSE")
 
     deliveries = order.get("deliveries") or []
     shipping_address = deliveries[0].get("shippingOrderAddress") if deliveries else None

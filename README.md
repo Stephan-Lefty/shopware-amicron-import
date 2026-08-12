@@ -227,10 +227,10 @@ Shop ggf. überprüfen/ändern:
 - **Versandkosten-Artikel**: Line-Items mit "Versandkosten" im Namen
   bekommen automatisch die feste Faktura-Artikelnummer `1000154`
   zugewiesen, unabhängig von der Shopware-Artikelnummer
-- **E-Mail-Adresse**: wird sowohl auf oberster Auftragsebene
-  (`#KUNADRESSE.EMAIL`, wie in der Importdefinition vorgesehen) als auch
-  zusätzlich im `billing`/`KUNADRESSE`-Block übertragen (siehe
-  Troubleshooting zur Vorgeschichte dieses Felds)
+- **E-Mail-Adresse**: wird auf oberster Auftragsebene übertragen
+  (`#KUNADRESSE.EMAIL`, genau wie in der Importdefinition vorgesehen),
+  nicht im `billing`/`KUNADRESSE`-Block (siehe Troubleshooting zur
+  Vorgeschichte dieses Felds)
 - **Artikel-Text**: zusätzlich zum Artikelnamen wird derselbe Text auch
   ins `text`-Feld der Position geschrieben (`ATRPOS.TEXT`) — dieses Feld
   existierte vorher noch gar nicht in der Importdefinition
@@ -294,6 +294,15 @@ sind nur Werte gültig, die vorher in den Programmoptionen unter
   im `billing`-Block ist von diesem Fund unabhängig weiterhin ungeklärt.
 
 ## Änderungsprotokoll
+
+### 1.11.1 (2026-08-12)
+- Doppeltes `email`-Tag im `billing`-Block wieder entfernt (E-Mail kommt
+  bereits über das Top-Level-Tag korrekt an, siehe 1.10.1). Vermutung:
+  Faktura verarbeitet Felder innerhalb eines `NewData`-Blocks
+  möglicherweise positionsbasiert — das zusätzliche `email`-Tag hätte
+  dann `countryiso` (das seitdem als 13. statt 12. Feld im Block stand)
+  auf eine nicht mehr definierte Position verschoben und dadurch das
+  Länderkennzeichen "L" beim Import verloren gehen lassen
 
 ### 1.11.0 (2026-08-12)
 - Recherche in der offiziellen Amicron-Doku ergab: `Lieferart` und
