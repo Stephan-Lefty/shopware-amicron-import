@@ -3,3 +3,7 @@ config.ini
 
 # Gepackte Distributions-ZIPs sind Build-Artefakte, keine Quelldateien
 *.zip
+
+# Python-Bytecode-Cache
+__pycache__/
+*.pyc
