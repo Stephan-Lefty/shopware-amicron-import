@@ -122,7 +122,22 @@ def salutation_text(salutation):
     return ""
 
 
+# Feste Vorgaben, unabhaengig von der tatsaechlichen Bestellung. Werden
+# sowohl auf Auftragsebene (#AUFTRAG.*) als auch im Kundendatensatz
+# (#KUNADRESSE.*) gesetzt - laut Amicron-Doku hat der Kunde eigene Felder
+# "Zahlweise"/"Lieferart", die beim Anlegen neuer Auftraege uebernommen
+# werden. Die Werte muessen exakt einem Eintrag aus den Programmoptionen
+# unter "Lieferart / Zahlweise" entsprechen.
+ZAHLWEISE = "Vorkasse"
+LIEFERART = "Paketdienst"
+
+
 def build_address_node(parent, tag_name, address, new_data):
+    # ACHTUNG Reihenfolge: Faktura ordnet die Kind-Tags eines NewData-Blocks
+    # offenbar positionsbasiert zu, nicht ueber den Tag-Namen. Die Reihenfolge
+    # hier muss deshalb exakt der Reihenfolge in der Importdefinition
+    # entsprechen - ein zusaetzliches Tag mittendrin verschiebt alle
+    # nachfolgenden Felder und laesst sie ins Leere laufen.
     address = address or {}
     node = ET.SubElement(parent, tag_name, {"NewData": new_data})
     add_text(node, "company", address.get("company"))
@@ -139,6 +154,9 @@ def build_address_node(parent, tag_name, address, new_data):
         add_text(node, "vatId", address.get("vatId"))
     country = address.get("country") or {}
     add_text(node, "countryiso", country.get("iso"))
+    if tag_name == "billing":
+        add_text(node, "kundeZahlweise", ZAHLWEISE)
+        add_text(node, "kundeLieferart", LIEFERART)
     return node
 
 
@@ -199,10 +217,12 @@ def sales_channel_name(order):
     return name or ""
 
 
-def build_order_element(order, shop_domain):
+def build_order_element(order):
     order_number = order.get("orderNumber", "")
     order_el = ET.Element("ORDER")
 
+    order_customer = order.get("orderCustomer") or {}
+    customer_email = order_customer.get("email", "")
     channel_name = sales_channel_name(order)
     number_value = f"{order_number} - {channel_name}" if channel_name else order_number
 
@@ -226,7 +246,10 @@ def build_order_element(order, shop_domain):
             order_date_only = order_datetime.split("T")[0]
     add_text(order_el, "orderTime", order_time_formatted)
     add_text(order_el, "orderDatum", order_date_only)
-    add_text(order_el, "shopURL", shop_domain)
+    # Freifeld 3 ist in dieser Faktura-Installation als "Kunden E-Mail"
+    # beschriftet - dort gehoert die Kundenadresse hinein, nicht (wie in der
+    # urspruenglichen Amicron-Vorlage) der Shop-Domainname.
+    add_text(order_el, "customerEmail", customer_email)
     add_text(order_el, "comment", order.get("customerComment"))
     add_text(order_el, "internalComment", "")
 
@@ -249,15 +272,12 @@ def build_order_element(order, shop_domain):
         add_text(item, "text", full_name)
         add_text(item, "taxRate", line_item_tax_rate(line_item))
 
-    # Zahlweise wird unabhaengig von der tatsaechlichen Zahlart der
-    # Bestellung immer fest als "Vorkasse" uebertragen.
     payment = ET.SubElement(order_el, "payment")
-    add_text(payment, "description", "Vorkasse")
+    add_text(payment, "description", ZAHLWEISE)
 
-    order_customer = order.get("orderCustomer") or {}
     add_text(order_el, "groupKey", channel_name)
     add_text(order_el, "priceGroupId", "")
-    add_text(order_el, "email", order_customer.get("email", ""))
+    add_text(order_el, "email", customer_email)
 
     debit = ET.SubElement(order_el, "debit")
     add_text(debit, "account", "")
@@ -272,15 +292,15 @@ def build_order_element(order, shop_domain):
     build_address_node(order_el, "shipping", shipping_address, "LFRADRESSE")
 
     dispatch = ET.SubElement(order_el, "dispatch")
-    add_text(dispatch, "name", "Paketdienst")
+    add_text(dispatch, "name", LIEFERART)
 
     return order_el
 
 
-def build_orders_xml(orders, shop_domain):
+def build_orders_xml(orders):
     root = ET.Element("ORDERS")
     for order in orders:
-        root.append(build_order_element(order, shop_domain))
+        root.append(build_order_element(order))
     rough = ET.tostring(root, encoding="iso-8859-1")
     pretty = minidom.parseString(rough).toprettyxml(indent="    ", encoding="iso-8859-1")
     return pretty
@@ -291,7 +311,6 @@ def main():
     shopware_cfg, faktura_cfg = load_config(config_path)
 
     shop_url = shopware_cfg["shop_url"].rstrip("/")
-    shop_domain = shop_url.replace("https://", "").replace("http://", "")
 
     print(f"Hole Access-Token von {shop_url} ...")
     token = get_access_token(shop_url, shopware_cfg["client_id"], shopware_cfg["client_secret"])
@@ -304,7 +323,7 @@ def main():
         print("Es sind keine neuen Bestellungen eingegangen!")
         return
 
-    xml_bytes = build_orders_xml(orders, shop_domain)
+    xml_bytes = build_orders_xml(orders)
 
     import_folder = Path(faktura_cfg["import_folder"])
     import_folder.mkdir(parents=True, exist_ok=True)

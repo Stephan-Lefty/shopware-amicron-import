@@ -207,16 +207,21 @@ Shop ggf. überprüfen/ändern:
   geführt wird — die `CONVERTLAND`-Tabelle in der alten
   Shopware-V4.1-Importdefinition (mit Kurzcodes wie `A`/`D`) ist dafür
   nicht (mehr) maßgeblich.
-- **Lieferart (Auftrag)**: wird immer fest als `Paketdienst` übertragen
-  (`dispatch/name` → `#AUFTRAG.LIEFERART`), unabhängig von der in
-  Shopware hinterlegten Versandart — laut Amicron-Doku muss der Wert
-  exakt einem in Faktura unter *Programmoptionen → "Lieferart / Zahlweise"*
-  definierten Eintrag entsprechen, `Paketdienst` ist dort bestätigt
-  vorhanden
-- **Zahlweise (Auftrag)**: wird immer fest als `Vorkasse` übertragen
-  (`payment/description` → `#AUFTRAG.ZAHLWEISE`), unabhängig von der
-  tatsächlichen Zahlart der Bestellung (z. B. PayPal) — ebenfalls
-  bestätigt als gültiger Eintrag in den Programmoptionen
+- **Lieferart & Zahlweise**: werden immer fest als `Paketdienst` bzw.
+  `Vorkasse` übertragen, unabhängig von der tatsächlichen Versand-/Zahlart
+  der Bestellung (z. B. PayPal). Beide Werte werden an **zwei** Stellen
+  gesetzt, weil Faktura sie sowohl beim Auftrag als auch beim Kunden führt:
+  - Auftrag: `dispatch/name` → `#AUFTRAG.LIEFERART`,
+    `payment/description` → `#AUFTRAG.ZAHLWEISE`
+  - Kundendatensatz (Reiter "Faktura"): `kundeLieferart` →
+    `#KUNADRESSE.LIEFERART`, `kundeZahlweise` → `#KUNADRESSE.ZAHLWEISE`
+    (laut [Amicron-Doku](http://amicron.org/onlinehilfe/amicron-faktura-13/kunden_feldbeschreibungen.htm)
+    hat der Kunde eigene Felder dafür, die in neue Aufträge übernommen
+    werden)
+
+  Laut Amicron-Doku müssen die Werte **exakt** einem in Faktura unter
+  *Programmoptionen → "Lieferart / Zahlweise"* definierten Eintrag
+  entsprechen — Freitext funktioniert nicht.
 - **Anrede**: Shopwares `salutationKey` wird auf `Herr`/`Frau` abgebildet;
   bei fehlender Angabe (`not_specified`, Shopware zeigt dann "Keine
   Angabe" an) bleibt das Feld bewusst leer, statt einen für Faktura
@@ -235,10 +240,12 @@ Shop ggf. überprüfen/ändern:
   die aus Shopware importierten Werte immer erhalten, und es muss keine
   einzelne Artikelnummer in Faktura gepflegt werden — die
   Produktidentifikation läuft komplett über Bezeichnung/Text
-- **E-Mail-Adresse**: wird auf oberster Auftragsebene übertragen
-  (`#KUNADRESSE.EMAIL`, genau wie in der Importdefinition vorgesehen),
-  nicht im `billing`/`KUNADRESSE`-Block (siehe Troubleshooting zur
-  Vorgeschichte dieses Felds)
+- **E-Mail-Adresse**: wird an zwei Stellen übertragen —
+  `email` → `#KUNADRESSE.EMAIL` (E-Mail im Kundenstammsatz) und
+  `customerEmail` → `#FREIFELD3` (das Feld, das auf dem Beleg unter
+  *Kopfdaten* als "Kunden E-Mail" beschriftet ist). Freifeld 3 enthielt in
+  der ursprünglichen Amicron-Vorlage den Shop-Domainnamen ("Bestellart") —
+  daher stand dort früher `sicherungsstangen.de` statt der Kundenadresse
 - **Artikel-Text**: zusätzlich zum Artikelnamen wird derselbe Text auch
   ins `text`-Feld der Position geschrieben (`ATRPOS.TEXT`) — dieses Feld
   existierte vorher noch gar nicht in der Importdefinition
@@ -246,16 +253,30 @@ Shop ggf. überprüfen/ändern:
   Verkaufskanal-Namen (Sicherungsstangen.de / Mörtelspritzen.de), nicht
   die generische Shopware-Kundengruppe
 
-**Wichtig bei jeder neu hinzukommenden Feldzuordnung** (z. B. `text`):
-Das Script kann beliebige XML-Tags erzeugen, aber ob Faktura sie
-tatsächlich verarbeitet, hängt allein von der **live in Faktura
-hinterlegten Importdefinition 3** ab (*Einstellungen → Importdefinitionen*),
-nicht von `Faktura_Importdefinition.xml` in diesem Repo (die ist nur
-eine Referenz/Ausgangsbasis). Neue Felder müssen dort manuell
-nachgetragen werden. Bei `Lieferart`/`Zahlweise` außerdem beachten: laut
-[Amicron-Doku zu den Auftrags-Feldbeschreibungen](https://www.amicron.org/onlinehilfe/amicron-faktura-13/auftrage_feldbeschreibungen.htm)
-sind nur Werte gültig, die vorher in den Programmoptionen unter
-"Lieferart / Zahlweise" definiert wurden — kein Freitext.
+### ⚠️ Script-Änderungen allein reichen nicht
+
+Das Script kann beliebige XML-Tags erzeugen — ob Faktura sie verarbeitet,
+hängt **allein von der live in Faktura hinterlegten Importdefinition 3**
+ab (*Einstellungen → Importdefinitionen*), nicht von
+`Faktura_Importdefinition.xml` in diesem Repo. Diese Datei ist die
+gepflegte Referenz: Nach einem Update mit neuen Feldern muss sie in
+Faktura als Importdefinition 3 **neu geladen** werden, sonst laufen die
+neuen Tags ins Leere.
+
+Zwei Fallstricke, die dabei Zeit gekostet haben:
+
+- **Reihenfolge ist relevant**: Faktura ordnet die Kind-Tags eines
+  `NewData`-Blocks (`billing`, `shipping`, `item`) offenbar
+  **positionsbasiert** zu, nicht über den Tag-Namen. Ein zusätzliches Tag
+  mitten im Block verschiebt alle folgenden Felder und lässt sie ins Leere
+  laufen — so ging zeitweise das Länderkennzeichen verloren, weil ein
+  überflüssiges `email`-Tag davor stand. Neue Felder deshalb immer **am
+  Ende** eines Blocks ergänzen und die Reihenfolge in Script und
+  Definition identisch halten.
+- **Lieferart/Zahlweise sind Auswahlfelder**: laut
+  [Amicron-Doku](https://www.amicron.org/onlinehilfe/amicron-faktura-13/auftrage_feldbeschreibungen.htm)
+  sind nur Werte gültig, die vorher in den Programmoptionen unter
+  "Lieferart / Zahlweise" definiert wurden — kein Freitext.
 
 ## Troubleshooting / bekannte Stolperfallen
 
@@ -286,22 +307,47 @@ sind nur Werte gültig, die vorher in den Programmoptionen unter
   "verstecken". Betrifft diese Installation nicht mehr, da das Script
   jetzt lokal auf dem Faktura-PC läuft, ist aber relevant, falls das
   Tool auf einem Server-Setup wiederverwendet wird.
-- **"Kunden E-Mail" auf dem Beleg-Kopfdaten-Bildschirm zeigt Shop-Domain
-  statt Kunden-E-Mail (Stand 2026-08-07, teilweise geklärt)** → ein
-  frischer Export der live in Faktura hinterlegten Importdefinition 3
-  zeigte, dass `<email>#KUNADRESSE.EMAIL</email>` **auf oberster
-  Auftragsebene** steht (nicht im `billing`-Block) — das Tag wurde beim
-  E-Mail-Fix versehentlich komplett dorthin verschoben und fehlte danach
-  auf oberster Ebene ganz. Wieder ergänzt (zusätzlich zum `billing`-Block).
-  Da "Kunden E-Mail" aber schon *vorher* (mit dem Tag an der jetzt
-  bestätigten korrekten Position) den `shopURL`-Wert zeigte, ist unklar,
-  ob dieses Beleg-Feld überhaupt an `KUNADRESSE.EMAIL` gebunden ist, oder
-  ob es sich um ein anders zweckbestimmtes Feld handelt (z. B.
-  Shop-Herkunft). Zu prüfen: zeigt die **Kundenverwaltung** (nicht der
-  Beleg) beim importierten Kunden die korrekte E-Mail? Das Länderkürzel
-  im `billing`-Block ist von diesem Fund unabhängig weiterhin ungeklärt.
+- **"Kunden E-Mail" auf dem Beleg zeigte die Shop-Domain (gelöst)** →
+  Dieses Feld auf dem Beleg-Reiter *Kopfdaten* ist gar nicht an
+  `KUNADRESSE.EMAIL` gebunden, sondern an **Freifeld 3** — und dort trug
+  die ursprüngliche Amicron-Vorlage den Shop-Domainnamen ein
+  (`<shopURL>#FREIFELD3</shopURL>`, in der Vorlage als "Bestellart"
+  gedacht). Das Feld ist in dieser Installation nur als "Kunden E-Mail"
+  beschriftet. Lösung: Freifeld 3 bekommt jetzt die Kundenadresse
+  (`<customerEmail>#FREIFELD3</customerEmail>`), der Shop-Domainname
+  entfällt — der Verkaufskanal steht ohnehin schon in der Bestellnummer
+  und in der Kundengruppe.
+- **Artikel-Textfeld blieb leer, obwohl das Script `text` sendet** → das
+  `<text>#ATRPOS.TEXT</text>`-Mapping fehlte in der live in Faktura
+  hinterlegten Importdefinition (nur in der Repo-Referenz war es
+  ergänzt). Grundsätzlich gilt: neue Tags brauchen immer auch eine neue
+  Zuordnung in Faktura, siehe Warnhinweis oben.
 
 ## Änderungsprotokoll
+
+### 1.13.0 (2026-08-13)
+
+> **Wichtig:** Diese Version bringt drei neue Feldzuordnungen mit. Die
+> mitgelieferte `Faktura_Importdefinition.xml` muss dafür in Faktura als
+> Importdefinition 3 **neu geladen** werden — sonst bleibt alles beim Alten.
+
+- **Zahlweise/Lieferart jetzt auch im Kundendatensatz** (Reiter "Faktura"):
+  neue Felder `kundeZahlweise` → `#KUNADRESSE.ZAHLWEISE` und
+  `kundeLieferart` → `#KUNADRESSE.LIEFERART`. Die
+  [Amicron-Doku](http://amicron.org/onlinehilfe/amicron-faktura-13/kunden_feldbeschreibungen.htm)
+  bestätigt, dass der Kunde eigene Felder dafür hat — die Streichung
+  dieser Felder in 1.11.0 war ein Irrtum. Bewusst **ans Ende** des
+  `billing`-Blocks gesetzt, damit sich die Position der bestehenden
+  Felder (insbesondere `countryiso`) nicht verschiebt.
+- **"Kunden E-Mail" auf dem Beleg**: Das Feld hängt an Freifeld 3, das
+  bisher den Shop-Domainnamen enthielt. `<shopURL>` wurde deshalb durch
+  `<customerEmail>` ersetzt, das die Kundenadresse überträgt.
+- **Artikel-Textfeld**: Das `text`-Mapping fehlte bislang in der live
+  hinterlegten Importdefinition, weshalb die Kundenauswahl (Größe, Farbe)
+  im Textfeld leer blieb — mit der neu zu ladenden Definition kommt sie an.
+- `Faktura_Importdefinition.xml`: kaputte Umlaute in den Kommentaren
+  repariert und die Datei wieder korrekt als `iso-8859-1` kodiert
+  (passend zur eigenen XML-Deklaration).
 
 ### 1.12.0 (2026-08-12)
 - Reguläre Artikel-Positionen verwenden jetzt eine feste Sammel-Artikelnummer

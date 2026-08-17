@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- Import Definition fï¿½r Shopware V4.1, Dez 2013, Version 0.95, AD -->
+<!-- Import Definition für Shopware V4.1, Dez 2013, Version 0.95, AD -->
 
 <ORDERS>
     <DEFINES>
         <!-- Dokumentation dieser Einstellungen: siehe Kapitel "Datenimport > Auftragsimport > Definitionsdatei: Aufbau und Inhalt"-->
         <DECIMALSEPARATOR>.</DECIMALSEPARATOR>
-        <!-- Konvertierung der Landeskï¿½rzel ist fï¿½r Amicron-Faktura notwendig fï¿½r die korrekte Ermittlung der Steuerkï¿½rzel bei  Auslandsrechnungen. -->
-        <!-- Importierte Landeskï¿½rzel fï¿½r Inland und EU-Lï¿½nder mï¿½ssen ï¿½bereinstimmen mit denen, die in der Faktura in -->
+        <!-- Konvertierung der Landeskürzel ist für Amicron-Faktura notwendig für die korrekte Ermittlung der Steuerkürzel bei  Auslandsrechnungen. -->
+        <!-- Importierte Landeskürzel für Inland und EU-Länder müssen übereinstimmen mit denen, die in der Faktura in -->
         <!-- den Programmoptionen unter "System > Einstellungen 2/2" eingetragen wurden -->
         <INLAND>D,DE,DEU,DEUTSCHLAND,GER,GERMANY</INLAND>
         <CONVERTLAND>AUT=A,AUS=A,Austria=A,AU=A,GERMANY=D,DE=D,GER=D,Netherlands=NL,France=FR,Slovenia=SL,Switzerland=CH,Spain=E,Greece=GR</CONVERTLAND>
@@ -15,8 +15,8 @@
         <!-- die Shop-Bestellnummer ins FREIFELD1 (Vermerk),
              das Bestelldatum ins FREIFELD2 (Bestellung vom) und
              der Shop-Domainname des Auftrags ins FREIFELD3 (Bestellart)
-             werden ï¿½bernommen
-             Bei Bedarf kï¿½nnen die geï¿½ndert werden: -->
+             werden übernommen
+             Bei Bedarf können die geändert werden: -->
         <id NewData="AUFTRAG">#AUFTRAGNR</id>
         <number>#FREIFELD1</number>
         <customerId>#KUNADRESSE.NR</customerId>
@@ -26,7 +26,7 @@
         <invoiceShippingTax>#VERSANDKOSTENSTEUER</invoiceShippingTax>
         <orderTime>#DATUM</orderTime>
         <orderDatum>#FREIFELD2</orderDatum>
-        <shopURL>#FREIFELD3</shopURL>
+        <customerEmail>#FREIFELD3</customerEmail>
         <comment>#BEMERKUNG</comment>
         <internalComment>#KUNADRESSE.BEMERKUNG</internalComment>
         <steuerInkl>#STEUERINKL</steuerInkl>
@@ -66,6 +66,8 @@
              <fax>#FAX</fax>
              <vatId>#USTIDNR</vatId>
              <countryiso>#LAND</countryiso>
+             <kundeZahlweise>#KUNADRESSE.ZAHLWEISE</kundeZahlweise>
+             <kundeLieferart>#KUNADRESSE.LIEFERART</kundeLieferart>
         </billing>
         <shipping NewData="LFRADRESSE">
              <company>#NAME2</company>
